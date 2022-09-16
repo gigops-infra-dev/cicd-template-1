@@ -40,6 +40,7 @@ runs:
       run: yes 1 | terragrunt run-all workspace show
       continue-on-error: true
       working-directory: ${{ inputs.working_dir }}
+      shell: bash
       env:
         AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
@@ -49,6 +50,7 @@ runs:
       run: ./deploy-terragrunt.sh init "${TARGET_DIR}" 1> stdout.log 2> stderr.log
       continue-on-error: true
       working-directory: ${{ inputs.working_dir }}
+      shell: bash
       env:
         AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
         TARGET_DIR: ${{ inputs.target_dir }}
@@ -92,6 +94,7 @@ runs:
         fi
 
       working-directory: ${{ inputs.working_directory }}
+      shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
         PR_NUMBER: ${{ inputs.pr_number }}
@@ -106,6 +109,7 @@ runs:
           gh api --method DELETE -H "Accept: application/vnd.github+json" ${APPLY_URL}
         fi
         exit 1
+      shell: bash
       env:
         PLAN_URL: ${{ inputs.plan_url }}
         APPLY_URL: ${{ inputs.apply_url }}

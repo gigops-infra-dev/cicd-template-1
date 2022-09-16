@@ -124,7 +124,7 @@ jobs:
           target=$(echo ${GITHUB_HEAD_REF} | awk -F "_" '{ print $NF }')
           echo "TARGET_DIR=$target" >> $GITHUB_ENV
 
-      - uses: ./.actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           token: ${{ steps.generate_token.outputs.token }}
           ref: ${{ env.HEAD_REF }}

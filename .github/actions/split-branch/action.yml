@@ -3,6 +3,7 @@ description: Split branch
 inputs:
   github_action_token:
     required: true
+    default: ${{ secrets.GITHUB_TOKEN }}
   base_ref:
     required: true
   head_ref:

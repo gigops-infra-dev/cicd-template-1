@@ -1,0 +1,47 @@
+name: Setup aws credentials
+description: Setup aws credentials
+inputs:
+  aws_role_arn:
+    description: 'AWS ROLE ARN'
+    required: true
+  aws_profile:
+    description: 'AWS PROFILE'
+    required: true
+  aws_region:
+    description: 'AWS REGION'
+    required: true
+  ssh_key:
+    description: "GITHUB SECRET (ssh_key)"
+    required: false
+    default: ${{ secrets.RSA }}
+  working_directory: 
+    description: "Directory with id_rsa"
+    required: false
+    default: /tmp
+outputs: 
+  git_ssh_command:
+    value: "ssh -i ${{ inputs.working_directory }}/id_rsa -o UserKnownHostsFile=${{ inputs.working_directory }}/known_hosts"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.aws_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+    - name: Set credentials
+      run: |
+        aws configure set region ${AWS_REGION} --profile ${AWS_PROFILE}
+        aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile ${AWS_PROFILE}
+        aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile ${AWS_PROFILE}
+        aws configure set aws_session_token ${AWS_SESSION_TOKEN} --profile ${AWS_PROFILE}
+      env:
+        AWS_PROFILE: ${{ inputs.aws_profile }}
+    - name: Set enctyption key for terraform module
+      run: |
+        echo "${SSH_KEY}" > ./id_rsa
+        echo $(ssh-keyscan -t rsa github.com)  > ./known_hosts
+        chmod 600 id_rsa known_hosts
+      working-directory: ${{ inputs.working_directory }}
+      env:
+        SSH_KEY: ${{ inputs.ssh_key }}

@@ -3,7 +3,7 @@ description: terragrunt init
 inputs:
   aws_profile:
     required: true
-  taget_dir:
+  target_dir:
     description: 'TARGET DIR'
     required: true
   git_ssh_command:
@@ -11,7 +11,7 @@ inputs:
     required: true
   working_directory:
     description: 'WORKING DIRECTORY'
-    required: trie
+    required: true
   is_write_pr:
     description: "Whether to write the result of init in markdown"
     default: true
@@ -39,7 +39,7 @@ runs:
     - name: init tf-workspace
       run: yes 1 | terragrunt run-all workspace show
       continue-on-error: true
-      working-directory: ${{ inputs.working_dir }}
+      working-directory: ${{ inputs.working_directory }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
@@ -49,7 +49,7 @@ runs:
     - id: init
       run: ./deploy-terragrunt.sh init "${TARGET_DIR}" 1> stdout.log 2> stderr.log
       continue-on-error: true
-      working-directory: ${{ inputs.working_dir }}
+      working-directory: ${{ inputs.working_directory }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
@@ -93,7 +93,7 @@ runs:
           gh pr comment ${PR_NUMBER} -F ./INIT.md
         fi
 
-      working-directory: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working_directoryectory }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}

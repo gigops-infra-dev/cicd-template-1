@@ -3,7 +3,7 @@ name: Push Feature Branch
 on:
   push:
     branches:
-      - feature/**
+      - 'feature/**'
 
 permissions: write-all
 env:
@@ -50,6 +50,7 @@ jobs:
         uses: ./.github/actions/check-deploy-accounts
         with:
           BASE_REF: ${{ env.BASE_REF }}
+          github_action_token: ${{ steps.generate_token.outputs.token }}
 
   create_pr:
     needs: check_changes

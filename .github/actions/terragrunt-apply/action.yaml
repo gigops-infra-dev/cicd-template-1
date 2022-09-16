@@ -15,9 +15,6 @@ inputs:
   tf_workspace:
     description: "TF WORKSPACE"
     required: true
-  pr_number:
-    description: "Pull request number"
-    required: true
   apply_url:
     description: "Pull request url"
     required: false
@@ -87,7 +84,7 @@ runs:
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
-        PR_NUMBER: ${{ inputs.pr_number }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
         APPLY_URL: ${{ inputs.apply_url }}
         GITHUB_TOKEN: ${{ inputs.github_action_token }}
 
@@ -99,7 +96,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
-        PR_NUMBER: ${{ inputs.pr_number }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
         BASE_REF: ${{ inputs.base_ref }}
         HEAD_REF: ${{ inputs.base_ref }}
         GITHUB_TOKEN: ${{ inputs.github_action_token }}

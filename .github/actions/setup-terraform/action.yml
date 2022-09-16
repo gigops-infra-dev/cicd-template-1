@@ -16,9 +16,7 @@ runs:
       shell: bash
     - run: tfenv install
       shell: bash
-      env:
-        working-directory: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working_directory }}
     - run: tgenv install
       shell: bash
-      env:
-        working-directory: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working_directory }}

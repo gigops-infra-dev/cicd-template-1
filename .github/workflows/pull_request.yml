@@ -71,9 +71,9 @@ jobs:
           target_dir: ${{ needs.check_changes.outputs.dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          init_url: ${{ steps.read-pr.outputs.init-url }}
-          plan_url: ${{ steps.read-pr.outputs.plan-url }}
-          apply_url: ${{ steps.read-pr.outputs.apply-url }}
+          init_url: ${{ steps.read-pr.outputs.init_url }}
+          plan_url: ${{ steps.read-pr.outputs.plan_url }}
+          apply_url: ${{ steps.read-pr.outputs.apply_url }}
 
       - if: ${{ steps.init.outcome == 'success' }} 
         uses: ./.github/actions/terragrunt-plan 
@@ -83,8 +83,8 @@ jobs:
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
-          plan_url: ${{ steps.read-pr.outputs.plan-url }}
-          apply_url: ${{ steps.read-pr.outputs.apply-url }}
+          plan_url: ${{ steps.read-pr.outputs.plan_url }}
+          apply_url: ${{ steps.read-pr.outputs.apply_url }}
 
   auto-merge:
     runs-on: ubuntu-latest

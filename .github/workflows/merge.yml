@@ -16,9 +16,9 @@ jobs:
   check-targets:
     runs-on: ubuntu-latest
     outputs:
-      init-url: ${{ steps.check.outputs.init_url }}
-      plan-url: ${{ steps.check.outputs.plan_url }}
-      apply-url: ${{ steps.check.outputs.apply_url }}
+      init_url: ${{ steps.check.outputs.init_url }}
+      plan_url: ${{ steps.check.outputs.plan_url }}
+      apply_url: ${{ steps.check.outputs.apply_url }}
       target-dir: ${{ steps.check.outputs.target_dir }}
     steps: 
       - uses: actions/checkout@v3
@@ -61,9 +61,9 @@ jobs:
           target_dir: ${{ needs.check-targets.outputs.target-dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          init_url: ${{ needs.check-targets.outputs.init-url }}
-          plan_url: ${{ needs.check-targets.outputs.plan-url }}
-          apply_url: ${{ needs.check-targets.outputs.apply-url }}
+          init_url: ${{ needs.check-targets.outputs.init_url }}
+          plan_url: ${{ needs.check-targets.outputs.plan_url }}
+          apply_url: ${{ needs.check-targets.outputs.apply_url }}
           is_write_pr: false
 
       - id: apply
@@ -75,7 +75,7 @@ jobs:
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working-directory: ./${{env.TERRAFORM_BASE_DIR}}/${{env.GHACTION_TARGET}}
-          apply_url: ${{ needs.check-targets.outputs.apply-url }}
+          apply_url: ${{ needs.check-targets.outputs.apply_url }}
         
   create-pr:
     runs-on: ubuntu-latest

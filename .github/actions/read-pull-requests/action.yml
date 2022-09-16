@@ -5,12 +5,12 @@ inputs:
     required: false
     default: tf-action[bot]
 outputs:
-  init-url: 
-    value: ${{ steps.read-pr.outputs.init-url }}
-  plan-url:
-    value:  ${{ steps.read-pr.outputs.plan-url }}
-  apply-url: 
-    value: ${{ steps.read-pr.outputs.apply-url }}
+  init_url: 
+    value: ${{ steps.read-pr.outputs.init_url }}
+  plan_url:
+    value: ${{ steps.read-pr.outputs.plan_url }}
+  apply_url: 
+    value: ${{ steps.read-pr.outputs.apply_url }}
   target_dir: 
     value: ${{ steps.read-pr.outputs.target_dir }}
 

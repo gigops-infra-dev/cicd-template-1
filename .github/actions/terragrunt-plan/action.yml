@@ -3,7 +3,7 @@ description: terragrunt plam
 inputs:
   aws_profile:
     required: true
-  taget_dir:
+  target_dir:
     description: 'TARGET DIR'
     required: true
   git_ssh_command:
@@ -11,7 +11,7 @@ inputs:
     required: true
   working_directory:
     description: 'WORKING DIRECTORY'
-    required: trie
+    required: true
   tf_workspace:
     description: "TF WORKSPACE"
     required: true
@@ -31,10 +31,10 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working_dir }}
       env:
-        AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
+        AWS_PROFILE: ${{ inputs.aws_profile }}
         TARGET_DIR: ${{ inputs.target_dir }}
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
-        TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
+        TF_WORKSPACE: ${{ inputs.tf_workspace }}
 
     - run: |
         if [ "${{ steps.plan.outcome }}" == "success" ]; then

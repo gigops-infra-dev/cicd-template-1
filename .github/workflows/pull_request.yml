@@ -84,8 +84,9 @@ jobs:
           target_dir: ${{ needs.check_changes.outputs.dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
+          working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
           plan_url: ${{ needs.check_changes.outputs.plan-url }}
+          apply_url: ${{ needs.check_changes.outputs.apply-url }}
 
   auto-merge:
     runs-on: ubuntu-latest

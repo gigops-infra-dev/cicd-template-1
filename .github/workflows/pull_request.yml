@@ -65,7 +65,8 @@ jobs:
           base_ref: ${{ github.base_ref }}
           terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
 
-      - uses: ./.github/actions/terragrunt-init
+      - id: init
+        uses: ./.github/actions/terragrunt-init
         with:
           aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
@@ -75,7 +76,6 @@ jobs:
           init_url: ${{ needs.check_changes.outputs.init-url }}
           plan_url: ${{ needs.check_changes.outputs.plan-url }}
           apply_url: ${{ needs.check_changes.outputs.apply-url }}
-          is_write_pr: true
 
       - if: ${{ steps.init.outcome == 'success' }} 
         uses: ./.github/actions/terragrunt-plan 

@@ -3,7 +3,7 @@ description: terragrunt apply
 inputs:
   aws_profile:
     required: true
-  taget_dir:
+  target_dir:
     description: 'TARGET DIR'
     required: true
   git_ssh_command:
@@ -11,7 +11,7 @@ inputs:
     required: true
   working_directory:
     description: 'WORKING DIRECTORY'
-    required: trie
+    required: true
   tf_workspace:
     description: "TF WORKSPACE"
     required: true
@@ -21,6 +21,8 @@ inputs:
   base_ref:
     required: true
   head_ref:
+    required: true
+  github_action_token:
     required: true
 
 runs:
@@ -89,7 +91,7 @@ runs:
         result=$(gh issue create --title "Error terragrunt apply" -F ./APPLY.md --label "bug" --label "base:${BASE_REF}" --label "head:${HEAD_REF}")
         issue_num=$(echo $result | awk -F "/" '{ print $NF }')
         exit 1
-      working-directory: ${{ inputs.working-directory }}
+      working-directory: ${{ inputs.working_directory }}
       shell: bash
       env:
         PR_NUMBER: ${{ github.event.pull_request.number }}

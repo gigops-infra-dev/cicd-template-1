@@ -31,8 +31,8 @@ checkout() {
       git checkout -b pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} origin/${BASE_REF}
       rc=0
     fi
-    return $rc
   fi
+  return $rc
 }
 
 option=`setOption`

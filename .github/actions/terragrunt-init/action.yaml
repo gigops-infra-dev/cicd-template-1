@@ -57,7 +57,7 @@ runs:
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
         TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
 
-    - if: ${{ inputs.inputs.is_write_pr }}
+    - if: ${{ inputs.is_write_pr }}
       run: |
         if [ "${{ steps.init.outcome }}" == "success" ]; then
           echo "# :heavy_check_mark:Terragrunt Init" > INIT.md

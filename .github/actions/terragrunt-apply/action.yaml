@@ -32,13 +32,13 @@ runs:
     - id: apply
       run:  ./deploy-terragrunt.sh apply "${TARGET_DIR}" 1> stdout.log 2> stderr.log
       continue-on-error: true
-      working-directory: ${{ inputs.working_dir }}
+      working-directory: ${{ inputs.working_directory }}
       shell: bash
       env:
-        AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
+        AWS_PROFILE: ${{ inputs.aws_profile }}
         TARGET_DIR: ${{ inputs.target_dir }}
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
-        TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
+        TF_WORKSPACE: ${{ inputs.tf_workspace }}
 
     - run: |
         if [ "${{ steps.apply.outcome }}" == "success" ]; then

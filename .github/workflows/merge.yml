@@ -46,11 +46,11 @@ jobs:
           head_ref: ${{ github.head_ref }}
       - uses: ./.github/actions/setup-terraform
         with:
-          working_directory: ./${{env.TERRAFORM_BASE_DIR}}/${{env.GHACTION_TARGET}}
+          working_directory: ./${{env.TERRAFORM_BASE_DIR}}/${{ steps.setup-envs.outputs.ghaction_target }}
       - uses: ./.github/actions/setup-aws-credentials
         with:
-          aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          aws_profile: ${{ env.AWS_PROFILE }}
+          aws_role_arn: ${{ steps.setup-envs.outputs.aws_role_arn }}
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
           aws_region: ap-northeast-1
 
       - id: init

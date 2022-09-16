@@ -78,6 +78,7 @@ jobs:
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
           apply_url: ${{ needs.check-targets.outputs.apply_url }}
+          github_action_token: ${{ steps.generate_token.outputs.token }}
         
   create-pr:
     runs-on: ubuntu-latest

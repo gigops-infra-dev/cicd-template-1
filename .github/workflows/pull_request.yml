@@ -67,6 +67,7 @@ jobs:
 
       - uses: ./.github/actions/terragrunt-init
         with:
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
           target_dir: ${{ needs.check_changes.outputs.dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
@@ -84,7 +85,6 @@ jobs:
           tf_workspace: "${{ env.TF_WORKSPACE }}"
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
           plan_url: ${{ needs.check_changes.outputs.plan-url }}
-          github_action_token: ${{ steps.generate_token.outputs.token }}
 
   auto-merge:
     runs-on: ubuntu-latest

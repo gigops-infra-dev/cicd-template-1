@@ -1,5 +1,5 @@
 name = "action"
-repo = "gigops/infra-cicd-template"
+repo = "gigops-infra-dev/cicd-template-1"
 region = "ap-northeast-1"
-create_oidc = true
+create_oidc = false
 profile = default

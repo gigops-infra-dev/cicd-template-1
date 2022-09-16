@@ -1,0 +1,44 @@
+name: Check deploy resources
+description: Check deploy resources
+inputs:
+  base_ref:
+    required: true
+  terraform_base_dir:
+    required: false
+    default: terraform
+  ghaction_target:
+    required: true
+  tf_workspace:
+    required: true
+outputs:
+  dir: 
+    value: ${{ steps.diff.outputs.dir }}
+
+runs:
+  using: "composite"
+  steps:
+    - run: git fetch --all
+      shell: bash
+    - run: git diff origin/${BASE_REF} --name-only --diff-filter=d 
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+
+    - id: diff
+      continue-on-error: true
+      run: |
+        set +e
+        diff=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/variables/${TF_WORKSPACE}.yml)
+        if [ -n "${diff}" ]; then
+          dir='all'
+        else
+          dir=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl | cut -d '/' -f 4 | uniq | tr '\n' ' ')
+        fi
+        echo "::set-output name=dir::$dir"
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+        TERRAFORM_BASE_DIR: ${{ inputs.terraform_base_dir }}
+        GHACTION_TARGET: ${{ inputs.ghaction_target }}
+        TF_WORKSPACE: ${{ inputs.tf_workspace }}
+

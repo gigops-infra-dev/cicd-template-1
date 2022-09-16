@@ -1,0 +1,26 @@
+name: Setup envs
+description: Setup environment variables
+inputs:
+  base_ref:
+    required: true
+  head_ref:
+    required: true
+outputs:
+  ghaction_target: 
+    value: ${{ steps.set-envs.outputs.ghaction_target }}
+  aws_profile:
+    value: ${{ steps.set-envs.outputs.aws_profile }}
+  aws_role_arn:
+    value: ${{ steps.set-envs.outputs.aws_role_arn }}
+  tf_workspace:
+    value: ${{ steps.set-envs.outputs.tf_workspace }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: set-envs
+      run: bash ${{ github.action_path }}/main.sh
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+        HEAD_REF: ${{ inputs.head_ref }}

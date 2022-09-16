@@ -1,0 +1,21 @@
+name: Setup terraform
+description: Setup terraform
+inputs:
+  working_directory:
+    description: 'WORKING DIRECTORY'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: rhythmictech/actions-setup-tfenv@v0.0.2
+    - name: setup tgenv
+      run: |
+        git clone https://github.com/cunymatthieu/tgenv.git ~/.tgenv
+        ln -s ~/.tgenv/bin/* /usr/local/bin
+    - run: tfenv install
+      env:
+        working-directory: ${{ inputs.working_directory }}
+    - run: tgenv install
+      env:
+        working-directory: ${{ inputs.working_directory }}

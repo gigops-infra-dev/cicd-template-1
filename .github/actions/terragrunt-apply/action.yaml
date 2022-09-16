@@ -1,0 +1,102 @@
+name: Terragrunt apply
+description: terragrunt apply
+inputs:
+  aws_profile:
+    required: true
+  taget_dir:
+    description: 'TARGET DIR'
+    required: true
+  git_ssh_command:
+    description: "GIT SSH COMMAND"
+    required: true
+  working_directory:
+    description: 'WORKING DIRECTORY'
+    required: trie
+  tf_workspace:
+    description: "TF WORKSPACE"
+    required: true
+  pr_number:
+    description: "Pull request number"
+    required: true
+  apply_url:
+    description: "Pull request url"
+    required: false
+  base_ref:
+    required: true
+  head_ref:
+    required: true
+  github_action_token:
+    required: false
+    default: ${{ secrets.GH_ACTION_TOKEN }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: apply
+      run:  ./deploy-terragrunt.sh apply "${TARGET_DIR}" 1> stdout.log 2> stderr.log
+      continue-on-error: true
+      working-directory: ${{ inputs.working_dir }}
+      env:
+        AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
+        TARGET_DIR: ${{ inputs.target_dir }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
+        TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
+
+    - run: |
+        if [ "${{ steps.apply.outcome }}" == "success" ]; then
+          echo "# :heavy_check_mark:Terragrunt apply" > APPLY.md
+          echo '```hcl' >> APPLY.md
+          cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> APPLY.md
+          echo "" >> APPLY.md
+          cat stdout.log | sed -n -e '/^Apply/p' >> APPLY.md
+          echo '```' >> APPLY.md
+          echo "<details>" >> APPLY.md
+          echo "<summary>Details</summary>" >> APPLY.md
+          echo -e "\n" >> APPLY.md
+          echo '```hcl' >> APPLY.md
+          cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> APPLY.md
+          echo "" >> APPLY.md
+          cat stdout.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> APPLY.md
+          echo '```' >> APPLY.md
+          echo "</details>" >> APPLY.md
+
+          echo -n "<!-- apply -->" >> APPLY.md
+        else
+          echo "# :bangbang:Terragrunt apply" > APPLY.md
+          echo '```hcl' >> APPLY.md
+          cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -n -e '/^Error/,+4p' >> APPLY.md
+          echo '```' >> APPLY.md
+          echo "<details>" >> APPLY.md
+          echo "<summary>Details</summary>" >> APPLY.md
+          echo -e "\n" >> APPLY.md
+          echo '```hcl' >> APPLY.md
+          cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> APPLY.md
+          echo '```' >> APPLY.md
+          echo "</details>" >> APPLY.md
+          echo -n "<!-- apply -->" >> APPLY.md
+        fi
+
+        if [ -n "${APPLY_URL}" ]; then
+          gh api --method PATCH -H "Accept: application/vnd.github+json" ${APPLY_URL} -f body="$(cat ./APPLY.md)"
+        else
+          gh pr comment ${PR_NUMBER} -F ./APPLY.md
+        fi
+
+      working-directory: ${{ inputs.working_directory }}
+      env:
+        AWS_PROFILE: ${{ inputs.aws_profile }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        APPLY_URL: ${{ inputs.apply_url }}
+        GITHUB_TOKEN: ${{ inputs.github_action_token }}
+
+    - if: ${{ steps.apply.outcome == 'failure' }}
+      run: |
+        result=$(gh issue create --title "Error terragrunt apply" -F ./APPLY.md --label "bug" --label "base:${BASE_REF}" --label "head:${HEAD_REF}")
+        issue_num=$(echo $result | awk -F "/" '{ print $NF }')
+        exit 1
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PR_NUMBER: ${{ inputs.pr_number }}
+        BASE_REF: ${{ inputs.base_ref }}
+        HEAD_REF: ${{ inputs.base_ref }}
+        GITHUB_TOKEN: ${{ inputs.github_action_token }}

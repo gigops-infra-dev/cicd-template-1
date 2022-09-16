@@ -16,6 +16,8 @@ jobs:
   check-targets:
     runs-on: ubuntu-latest
     outputs:
+      init-url: ${{ steps.check.outputs.init_url }}
+      plan-url: ${{ steps.check.outputs.plan_url }}
       apply-url: ${{ steps.check.outputs.apply_url }}
       target-dir: ${{ steps.check.outputs.target_dir }}
     steps: 
@@ -57,24 +59,25 @@ jobs:
       - id: init
         uses: ./.github/actions/terragrunt-init
         with:
-          aws_profile: ${{ env.AWS_PROFILE }}
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
+          working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
           target_dir: ${{ needs.check-targets.outputs.target-dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
-          tf_workspace: ${{ env.TF_WORKSPACE }}
-          working-directory: ./${{env.TERRAFORM_BASE_DIR}}/${{env.GHACTION_TARGET}}
+          tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
+          init_url: ${{ needs.check-targets.outputs.init-url }}
+          plan_url: ${{ needs.check-targets.outputs.plan-url }}
+          apply_url: ${{ needs.check-targets.outputs.apply-url }}
           is_write_pr: false
-          pr_number: ${{ github.event.pull_request.number }}
 
       - id: apply
         if: ${{ steps.init.outcome == 'success' }} 
         uses: ./.github/actions/terragrunt-apply
         with:
-          aws_profile: ${{ env.AWS_PROFILE }}
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
           target_dir: ${{ needs.check-targets.outputs.target-dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
-          tf_workspace: ${{ env.TF_WORKSPACE }}
+          tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working-directory: ./${{env.TERRAFORM_BASE_DIR}}/${{env.GHACTION_TARGET}}
-          pr_number: ${{ github.event.pull_request.number }}
           apply_url: ${{ needs.check-targets.outputs.apply-url }}
         
   create-pr:

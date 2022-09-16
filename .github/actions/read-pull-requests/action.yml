@@ -6,6 +6,9 @@ inputs:
   terraform_base_dir:
     required: false
     default: terraform
+  bot_name:
+    required: false
+    default: tf-action[bot]
 outputs:
   init-url: 
     value: ${{ steps.read-pr.outputs.init-url }}
@@ -24,3 +27,4 @@ runs:
       shell: bash
       env:
         PR_NUMBER: ${{ github.event.pull_request.number }}
+        BOT_NAME: ${{ inputs.bot_name }}

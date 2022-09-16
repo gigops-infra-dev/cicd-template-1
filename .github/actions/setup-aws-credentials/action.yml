@@ -37,11 +37,14 @@ runs:
         aws configure set aws_session_token ${AWS_SESSION_TOKEN} --profile ${AWS_PROFILE}
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
+      shell: bash
+      
     - name: Set enctyption key for terraform module
       run: |
         echo "${SSH_KEY}" > ./id_rsa
         echo $(ssh-keyscan -t rsa github.com)  > ./known_hosts
         chmod 600 id_rsa known_hosts
       working-directory: ${{ inputs.working_directory }}
+      shell: bash
       env:
         SSH_KEY: ${{ inputs.ssh_key }}

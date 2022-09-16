@@ -13,9 +13,12 @@ runs:
       run: |
         git clone https://github.com/cunymatthieu/tgenv.git ~/.tgenv
         ln -s ~/.tgenv/bin/* /usr/local/bin
+      shell: bash
     - run: tfenv install
+      shell: bash
       env:
         working-directory: ${{ inputs.working_directory }}
     - run: tgenv install
+      shell: bash
       env:
         working-directory: ${{ inputs.working_directory }}

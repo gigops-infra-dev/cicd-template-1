@@ -17,7 +17,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - id: read_pr
+    - id: read-pr
       run: bash ${{ github.action_path }}/main.sh
       shell: bash
       env:

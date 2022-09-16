@@ -58,6 +58,7 @@ jobs:
           aws_role_arn: ${{ steps.setup-envs.outputs.aws_role_arn }}
           aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
           aws_region: ap-northeast-1
+          ssh_key: ${{ secrets.RSA }}
 
       - uses: ./.github/actions/read-pull-requests
         with:

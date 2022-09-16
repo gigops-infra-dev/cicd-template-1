@@ -10,7 +10,7 @@ jq -c .targets[] ${json} | while read line; do
     aws_role_arn=$(echo $line | jq -r .${BASE_REF}.aws_role_arn)
     tf_workspace=$(echo $line | jq -r .${BASE_REF}.tf_workspace)
     
-    echo "SET GHACTION_TARGET = $ghaction_target"
+    echo "SET GHACTION_TARGET=$ghaction_target"
     echo "::set-output name=ghaction_target::$ghaction_target"
 
     echo "SET AWS_PROFILE=$aws_profile"

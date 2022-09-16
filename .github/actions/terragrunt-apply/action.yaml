@@ -22,9 +22,6 @@ inputs:
     required: true
   head_ref:
     required: true
-  github_action_token:
-    required: false
-    default: ${{ secrets.GH_ACTION_TOKEN }}
 
 runs:
   using: "composite"
@@ -86,7 +83,6 @@ runs:
         AWS_PROFILE: ${{ inputs.aws_profile }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         APPLY_URL: ${{ inputs.apply_url }}
-        GITHUB_TOKEN: ${{ inputs.github_action_token }}
 
     - if: ${{ steps.apply.outcome == 'failure' }}
       run: |
@@ -99,4 +95,3 @@ runs:
         PR_NUMBER: ${{ github.event.pull_request.number }}
         BASE_REF: ${{ inputs.base_ref }}
         HEAD_REF: ${{ inputs.base_ref }}
-        GITHUB_TOKEN: ${{ inputs.github_action_token }}

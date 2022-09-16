@@ -39,7 +39,10 @@ runs:
     - if: ${{ steps.split_branch.outcome == 'success' && steps.split_branch.outputs.commit == 'true' }}
       run: |
         if [ ! -n "$(gh pr list --base ${BASE_REF} --head pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} )" ]; then
-          gh pr create --base ${BASE_REF} --head pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} --title "pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} -> ${BASE_REF}" --body ""
+          gh pr create --base ${BASE_REF} \
+          --head pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} \
+          --title "pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} -> ${BASE_REF}" \
+          --body "${{ github.event.head_commit.message }}"
         fi
       shell: bash
       env:

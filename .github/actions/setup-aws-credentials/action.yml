@@ -12,8 +12,7 @@ inputs:
     required: true
   ssh_key:
     description: "GITHUB SECRET (ssh_key)"
-    required: false
-    default: ${{ secrets.RSA }}
+    required: true
   working_directory: 
     description: "Directory with id_rsa"
     required: false
@@ -37,8 +36,9 @@ runs:
         aws configure set aws_session_token ${AWS_SESSION_TOKEN} --profile ${AWS_PROFILE}
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
+        AWS_REGION: ${{ inputs.aws_region }}
       shell: bash
-      
+
     - name: Set enctyption key for terraform module
       run: |
         echo "${SSH_KEY}" > ./id_rsa

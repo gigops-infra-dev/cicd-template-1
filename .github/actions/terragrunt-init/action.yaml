@@ -37,7 +37,7 @@ runs:
   using: "composite"
   steps:
     - name: init tf-workspace
-      run: yes 1 | terragrunt run-all workspace show
+      run: yes 1 | terragrunt run-all workspace show &>/dev/null
       continue-on-error: true
       working-directory: ${{ inputs.working_directory }}
       shell: bash
@@ -93,7 +93,7 @@ runs:
           gh pr comment ${PR_NUMBER} -F ./INIT.md
         fi
 
-      working-directory: ${{ inputs.working_directoryectory }}
+      working-directory: ${{ inputs.working_directory }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}

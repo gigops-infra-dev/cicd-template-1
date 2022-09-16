@@ -45,7 +45,7 @@ if checkout "$option"; then
   fi
   echo "push"
   git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
-  git push -f origin HEAD
+  git push -f origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
   echo "::set-output name=commit::true"
 else
   echo "no changes"

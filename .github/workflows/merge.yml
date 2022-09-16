@@ -31,9 +31,16 @@ jobs:
     needs: check-targets
     if: ${{ needs.check-targets.outputs.target-dir != '' }}
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+          
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GH_ACTION_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
       - uses: ./.github/actions/setup-envs
         with:
           base_ref: ${{ github.base_ref }}
@@ -78,6 +85,13 @@ jobs:
       HEAD_REF: staging
     if: ${{ needs.check-targets.outputs.target-dir == '' && github.base_ref  == 'staging' }}
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - uses: actions/checkout@v3      
         with:
           fetch-depth: 0
@@ -87,7 +101,7 @@ jobs:
         with:
           base_ref: ${{ env.BASE_REF }}
           head_ref: ${{ env.HEAD_REF }}
-          github_action_token: ${{ secrets.GH_ACTION_TOKEN }}
+          github_action_token: ${{ steps.generate_token.outputs.token }}
 
   split-branch:
     runs-on: ubuntu-latest
@@ -97,6 +111,13 @@ jobs:
       BASE_REF: main
       HEAD_REF: staging
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - run: |
           target=$(echo ${GITHUB_HEAD_REF} | awk -F "_" '{ print $NF }')
           echo "TARGET_DIR=$target" >> $GITHUB_ENV

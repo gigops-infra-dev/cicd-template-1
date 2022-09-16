@@ -1,0 +1,111 @@
+name: Terragrunt init
+description: terragrunt init
+inputs:
+  aws_profile:
+    required: true
+  taget_dir:
+    description: 'TARGET DIR'
+    required: true
+  git_ssh_command:
+    description: "GIT SSH COMMAND"
+    required: true
+  working_directory:
+    description: 'WORKING DIRECTORY'
+    required: trie
+  is_write_pr:
+    description: "Whether to write the result of init in markdown"
+    default: true
+    required: false
+    type: boolean
+  tf_workspace:
+    description: "TF WORKSPACE"
+    required: true
+  pr_number:
+    description: "Pull request number"
+    required: true
+  init_url:
+    description: "Pull request url"
+    required: false
+  plan_url:
+    description: "Pull request url"
+    required: false
+  apply_url:
+    description: "Pull request url"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: init tf-workspace
+      run: yes 1 | terragrunt run-all workspace show
+      continue-on-error: true
+      working-directory: ${{ inputs.working_dir }}
+      env:
+        AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
+        TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }} 
+
+    - id: init
+      run: ./deploy-terragrunt.sh init "${TARGET_DIR}" 1> stdout.log 2> stderr.log
+      continue-on-error: true
+      working-directory: ${{ inputs.working_dir }}
+      env:
+        AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
+        TARGET_DIR: ${{ inputs.target_dir }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
+        TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
+
+    - if: ${{ inputs.inputs.is_write_pr }}
+      run: |
+        if [ "${{ steps.init.outcome }}" == "success" ]; then
+          echo "# :heavy_check_mark:Terragrunt Init" > INIT.md
+          echo '```hcl' >> INIT.md
+          cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> INIT.md
+          echo "" >> INIT.md
+          cat stdout.log | sed -n -e '/^Terraform has been successfully initialized!/p' >> INIT.md
+          echo '```' >> INIT.md
+          echo "<details>" >> INIT.md
+          echo "<summary>Details</summary>" >> INIT.md
+          echo -e "\n" >> INIT.md
+          echo '```hcl' >> INIT.md
+          cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> INIT.md
+          echo "" >> INIT.md
+          cat stdout.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> INIT.md
+          echo '```' >> INIT.md
+          echo "</details>" >> INIT.md
+
+          echo -n "<!-- init -->" >> INIT.md
+          success=true
+        else 
+          echo "# :bangbang:Terragrunt Init" > INIT.md
+          echo '```hcl' >> INIT.md
+          cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> INIT.md
+          echo '```' >> INIT.md
+          echo -n "<!-- init -->" >> INIT.md
+          success=false
+        fi
+
+        if [ -n "${INIT_URL}" ]; then
+          gh api --method PATCH -H "Accept: application/vnd.github+json" ${INIT_URL} -f body="$(cat ./INIT.md)"
+        else
+          gh pr comment ${PR_NUMBER} -F ./INIT.md
+        fi
+
+      working-directory: ${{ inputs.working_directory }}
+      env:
+        AWS_PROFILE: ${{ inputs.aws_profile }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        INIT_URL: ${{ inputs.init_url }}
+
+    - if: ${{ steps.init.outcome == 'failure' }} 
+      run: |
+        if [ -n "$PLAN_URL" ]; then
+          gh api --method DELETE -H "Accept: application/vnd.github+json" ${PLAN_URL}
+        fi
+        if [ -n "$APPLY_URL" ]; then
+          gh api --method DELETE -H "Accept: application/vnd.github+json" ${APPLY_URL}
+        fi
+        exit 1
+      env:
+        PLAN_URL: ${{ inputs.plan_url }}
+        APPLY_URL: ${{ inputs.apply_url }}

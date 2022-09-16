@@ -15,293 +15,91 @@ jobs:
   check_changes:
     runs-on: ubuntu-latest
     outputs:
-      target: ${{ steps.diff.outputs.target }}
+      dir: ${{ steps.diff.outputs.dir }}
     steps:
       - uses: actions/checkout@v3
-      - name: read-env
-        run: |
-          target=$(echo ${GITHUB_HEAD_REF} | awk -F "_" '{ print $NF }')
-          echo $target
-          jq -c .targets[] actions.json | while read line; do
-            ghaction_target=$(echo $line | jq -r .ghaction_target)
-            echo $ghaction_target
-            if [ "${ghaction_target}" == "${target}" ]; then
-              aws_profile=$(echo $line | jq -r .${GITHUB_BASE_REF}.aws_profile)
-              aws_role_arn=$(echo $line | jq -r .${GITHUB_BASE_REF}.aws_role_arn)
-              tf_workspace=$(echo $line | jq -r .${GITHUB_BASE_REF}.tf_workspace)
-              echo "GHACTION_TARGET=$ghaction_target" >> $GITHUB_ENV
-              echo "AWS_PROFILE=$aws_profile" >> $GITHUB_ENV
-              echo "AWS_ROLE_ARN=$aws_role_arn" >> $GITHUB_ENV
-              echo "TF_WORKSPACE=$tf_workspace" >> $GITHUB_ENV
-              echo $GITHUB_ENV
-              break
-            fi
-          done
+      - id: setup-envs
+        uses: ./.github/actions/setup-envs
+        with:
+          base_ref: ${{ github.base_ref }}
+          head_ref: ${{ github.head_ref }}
 
-      - run: git fetch --all
-      - run: git diff origin/${GITHUB_BASE_REF} --name-only --diff-filter=d 
       - id: diff
-        continue-on-error: true
-        run: |
-          set +e
-          diff=$(git diff origin/${GITHUB_BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/variables/${TF_WORKSPACE}.yml)
-
-          if [ -n "${diff}" ]; then
-            target='all'
-          else
-            target=$(git diff origin/${GITHUB_BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl | cut -d '/' -f 4 | uniq | tr '\n' ' ')
-          fi
-          echo "::set-output name=target::$target"
+        uses: ./.github/actions/check-deploy-resources 
+        with:
+          base_ref: ${{ github.base_ref }}
+          terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
+          ghaction_target: ${{ steps.setup-envs.outputs.ghaction_target }}
+          tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
 
   plan:
     runs-on: ubuntu-latest
     needs: check_changes
-    if: ${{ needs.check_changes.outputs.target != '' }}
+    if: ${{ needs.check_changes.outputs.dir != '' }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: rhythmictech/actions-setup-tfenv@v0.0.2
-      - name: setup tgenv
-        run: |
-          git clone https://github.com/cunymatthieu/tgenv.git ~/.tgenv
-          ln -s ~/.tgenv/bin/* /usr/local/bin
-
-      - name: read-env
-        run: |
-          target=$(echo ${GITHUB_HEAD_REF} | awk -F "_" '{ print $NF }')
-          jq -c .targets[] actions.json | while read line;do
-            ghaction_target=$(echo $line | jq -r .ghaction_target)
-            if [ "$ghaction_target" == "${target}" ]; then
-              aws_profile=$(echo $line | jq -r .${GITHUB_BASE_REF}.aws_profile)
-              aws_role_arn=$(echo $line | jq -r .${GITHUB_BASE_REF}.aws_role_arn)
-              tf_workspace=$(echo $line | jq -r .${GITHUB_BASE_REF}.tf_workspace)
-              echo "GHACTION_TARGET=$ghaction_target" >> $GITHUB_ENV
-              echo "AWS_PROFILE=$aws_profile" >> $GITHUB_ENV
-              echo "AWS_ROLE_ARN=$aws_role_arn" >> $GITHUB_ENV
-              echo "TF_WORKSPACE=$tf_workspace" >> $GITHUB_ENV
-              break
-            fi
-          done  
-
-      - uses: aws-actions/configure-aws-credentials@v1
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
         with:
-          role-to-assume: ${{env.AWS_ROLE_ARN}}
-          aws-region: ap-northeast-1
-      - run: |
-          aws configure set region ${AWS_REGION} --profile ${AWS_PROFILE}
-          aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile ${AWS_PROFILE}
-          aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile ${AWS_PROFILE}
-          aws configure set aws_session_token ${AWS_SESSION_TOKEN} --profile ${AWS_PROFILE}
-      - id: check-over-write
-        run: |
-          json=$(gh api --method GET -H "Accept: application/vnd.github.v3+json" /repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments)
-          length=$(echo $json | jq length)
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
 
-          for i in $( seq 0 $(($length - 1)) ); do
-            user=$(echo $json | jq -r .[$i].user.login)
-            body=$(echo $json | jq -r .[$i].body | tail -n 1)
-            if [ "$user" == "github-actions[bot]" ] && [[ "$body" =~ plan ]]; then
-              url=$(echo $json | jq -r .[$i].url)
-              repo=$(echo ${url#https://api.github.com})
-              echo "::set-output name=plan-url::$repo"
-              break
-            fi
-          done
+      - uses: actions/checkout@v3
+      - id: setup-envs
+        uses: ./.github/actions/setup-envs
+        with:
+          base_ref: ${{ github.base_ref }}
+          head_ref: ${{ github.head_ref }}
+      - uses: ./.github/actions/setup-terraform
+        with:
+          working_directory: ./${{env.TERRAFORM_BASE_DIR}}/${{ steps.setup-envs.outputs.ghaction_target }}
+      - uses: ./.github/actions/setup-aws-credentials
+        with:
+          aws_role_arn: ${{ steps.setup-envs.outputs.aws_role_arn }}
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
+          aws_region: ap-northeast-1
 
-          for i in $( seq 0 $(($length - 1)) ); do
-            user=$(echo $json | jq -r .[$i].user.login)
-            body=$(echo $json | jq -r .[$i].body | tail -n 1)
-            if [ "$user" == "github-actions[bot]" ] && [[ "$body" =~ init ]]; then
-              url=$(echo $json | jq -r .[$i].url)
-              repo=$(echo ${url#https://api.github.com})
-              echo "::set-output name=init-url::$repo"
-              break
-            fi
-          done
+      - uses: ./.github/actions/read-pull-requests
+        with:
+          base_ref: ${{ github.base_ref }}
+          terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
 
-          for i in $( seq 0 $(($length - 1)) ); do
-            user=$(echo $json | jq -r .[$i].user.login)
-            body=$(echo $json | jq -r .[$i].body | tail -n 1)
-            if [ "$user" == "github-actions[bot]" ] && [[ "$body" =~ apply ]]; then
-              url=$(echo $json | jq -r .[$i].url)
-              repo=$(echo ${url#https://api.github.com})
-              echo "::set-output name=apply-url::$repo"
-              break
-            fi
-          done
-
-      - run: |
-          tfenv install
-          tgenv install
-        working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
-
-      - run: |
-          echo "${{ secrets.RSA }}" > ./id_rsa
-          echo $(ssh-keyscan -t rsa github.com)  > known_hosts
-          chmod 600 id_rsa known_hosts
-        working-directory: /tmp
-
-      - name: init tf-workspace
-        run: yes 1 | terragrunt run-all workspace show
-        continue-on-error: true
-        working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
-        env:
-          AWS_PROFILE: "${{ env.AWS_PROFILE }}"
-          TF_WORKSPACE: "${{ env.TF_WORKSPACE }}"  
-          GIT_SSH_COMMAND: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts      
-
-      - id: init
-        run: | 
-          ./deploy-terragrunt.sh init "${TARGET_DIR}" 1> stdout.log 2> stderr.log
-        continue-on-error: true
-        working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
-        env:
-          AWS_PROFILE: "${{ env.AWS_PROFILE }}"
-          TARGET_DIR: ${{ needs.check_changes.outputs.target }}
-          GIT_SSH_COMMAND: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
-          TF_WORKSPACE: "${{ env.TF_WORKSPACE }}"
-
-      - run: |
-          if [ "${{ steps.init.outcome }}" == "success" ]; then
-            echo "# :heavy_check_mark:Terragrunt Init" > INIT.md
-            echo '```hcl' >> INIT.md
-            cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> INIT.md
-            echo "" >> INIT.md
-            cat stdout.log | sed -n -e '/^Terraform has been successfully initialized!/p' >> INIT.md
-            echo '```' >> INIT.md
-            echo "<details>" >> INIT.md
-            echo "<summary>Details</summary>" >> INIT.md
-            echo -e "\n" >> INIT.md
-            echo '```hcl' >> INIT.md
-            cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> INIT.md
-            echo "" >> INIT.md
-            cat stdout.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> INIT.md
-            echo '```' >> INIT.md
-            echo "</details>" >> INIT.md
-
-            echo -n "<!-- init -->" >> INIT.md
-            success=true
-          else 
-            echo "# :bangbang:Terragrunt Init" > INIT.md
-            echo '```hcl' >> INIT.md
-            cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> INIT.md
-            echo '```' >> INIT.md
-            echo -n "<!-- init -->" >> INIT.md
-            success=false
-          fi
-
-          if [ -n "${{ steps.check-over-write.outputs.init-url}}" ]; then
-            gh api --method PATCH -H "Accept: application/vnd.github+json" ${{ steps.check-over-write.outputs.init-url}} -f body="$(cat ./INIT.md)"
-          else
-            gh pr comment ${PR_NUMBER} -F ./INIT.md
-          fi
-
-        working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
-        env:
-          AWS_PROFILE: ${{ env.AWS_PROFILE }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-
-      - id: plan
-        if: ${{ steps.init.outcome == 'success' }} 
-        run:  ./deploy-terragrunt.sh plan "${TARGET_DIR}" 1> stdout.log 2> stderr.log
-        continue-on-error: true
-        working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
-        env:
-          AWS_PROFILE: "${{ env.AWS_PROFILE }}"
-          TARGET_DIR: ${{ needs.check_changes.outputs.target }}
-          GIT_SSH_COMMAND: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
-          TF_WORKSPACE: "${{ env.TF_WORKSPACE }}"
+      - uses: ./.github/actions/terragrunt-init
+        with:
+          working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
+          target_dir: ${{ needs.check_changes.outputs.dir }}
+          git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
+          tf_workspace: "${{ steps.setup-envs.outputs.tf_workspace }}"
+          init_url: ${{ needs.check_changes.outputs.init-url }}
+          plan_url: ${{ needs.check_changes.outputs.plan-url }}
+          apply_url: ${{ needs.check_changes.outputs.apply-url }}
 
       - if: ${{ steps.init.outcome == 'success' }} 
-        run: |
-          if [ "${{ steps.plan.outcome }}" == "success" ]; then
-            echo "# :heavy_check_mark:Terragrunt Plan" > PLAN.md
-            echo '```hcl' >> PLAN.md
-            cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> PLAN.md
-            echo "" >> PLAN.md
-            cat stdout.log | sed -n -e '/^Plan/p' >> PLAN.md
-            echo '```' >> PLAN.md
-            echo "<details>" >> PLAN.md
-            echo "<summary>Details</summary>" >> PLAN.md
-            echo -e "\n" >> PLAN.md
-            echo '```hcl' >> PLAN.md
-            cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> PLAN.md
-            echo "" >> PLAN.md
-            cat stdout.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> PLAN.md
-            echo '```' >> PLAN.md
-            echo "</details>" >> PLAN.md
+        uses: ./.github/actions/terragrunt-plan 
+        with:
+          aws_profile: "${{ env.AWS_PROFILE }}"
+          target_dir: ${{ needs.check_changes.outputs.dir }}
+          git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
+          tf_workspace: "${{ env.TF_WORKSPACE }}"
+          working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
+          plan_url: ${{ needs.check_changes.outputs.plan-url }}
+          github_action_token: ${{ steps.generate_token.outputs.token }}
 
-            echo -n "<!-- plan -->" >> PLAN.md
-            success=true
-          else
-            echo "# :bangbang:Terragrunt Plan" > PLAN.md
-            echo '```hcl' >> PLAN.md
-            cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -n -e '/^Error/,+4p' >> PLAN.md
-            echo '```' >> PLAN.md
-            echo "<details>" >> PLAN.md
-            echo "<summary>Details</summary>" >> PLAN.md
-            echo -e "\n" >> PLAN.md
-            echo '```hcl' >> PLAN.md
-            cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> PLAN.md
-            echo '```' >> PLAN.md
-            echo "</details>" >> PLAN.md
-            echo -n "<!-- plan -->" >> PLAN.md
-            success=false
-          fi
-
-          if [ -n "${{ steps.check-over-write.outputs.plan-url}}" ]; then
-            gh api --method PATCH -H "Accept: application/vnd.github+json" ${{ steps.check-over-write.outputs.plan-url}} -f body="$(cat ./PLAN.md)"
-          else
-            gh pr comment ${PR_NUMBER} -F ./PLAN.md
-          fi
-
-          if ! "$success" ;then 
-            exit 1
-          fi
-
-        working-directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{env.GHACTION_TARGET}}
-        env:
-          AWS_PROFILE: "${{ env.AWS_PROFILE }}"
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-
-      - if: ${{ steps.plan.outcome == 'success' }} 
-        run: |
-          echo "Click 'Merge pull request' will execute terragrunt apply" > APPLY.md
-          echo "<!-- TARGET_DIR: ${TARGET_DIR} -->" >> APPLY.md
-          echo -n "<!-- apply -->" >> APPLY.md
-
-          if [ -n "${{ steps.check-over-write.outputs.apply-url}}" ]; then
-            gh api --method PATCH -H "Accept: application/vnd.github+json" ${{ steps.check-over-write.outputs.apply-url}} -f body="$(cat ./APPLY.md)"
-          else
-            gh pr comment ${PR_NUMBER} -F ./APPLY.md
-          fi
-        env:
-          TARGET_DIR: ${{ needs.check_changes.outputs.target }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-
-      - if: ${{ steps.init.outcome == 'failure' }} 
-        run: |
-          if [ -n "${{ steps.check-over-write.outputs.plan-url}}" ]; then
-            gh api --method DELETE -H "Accept: application/vnd.github+json" ${{ steps.check-over-write.outputs.plan-url}}
-          fi
-          if [ -n "${{ steps.check-over-write.outputs.apply-url}}" ]; then
-            gh api --method DELETE -H "Accept: application/vnd.github+json" ${{ steps.check-over-write.outputs.apply-url}}
-          fi
-          exit 1
-
-      - if: ${{ steps.plan.outcome == 'failure' }} 
-        run: |
-          if [ -n "${{ steps.check-over-write.outputs.apply-url}}" ]; then
-            gh api --method DELETE -H "Accept: application/vnd.github+json" ${{ steps.check-over-write.outputs.apply-url}}
-          fi
-          exit 1
   auto-merge:
     runs-on: ubuntu-latest
     needs: check_changes
-    if: ${{ needs.check_changes.outputs.target == '' }}
+    if: ${{ needs.check_changes.outputs.dir == '' }}
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - uses: actions/checkout@v3
       - run: |
           gh pr merge ${PR_NUMBER} --merge
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          GITHUB_TOKEN: ${{ secrets.GH_ACTION_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}

@@ -13,136 +13,68 @@ jobs:
   partial_merge:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - uses: actions/checkout@v3      
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_ACTION_TOKEN }}
-          
-      - run: | 
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git fetch origin
+          token: ${{ steps.generate_token.outputs.token }}
 
-      - id: split_branch
-        continue-on-error: true
-        run: |
-          set +e
-          if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX})" ]; then
-            echo "branch exists"
-            if [ -n "$(git diff origin/pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX} --name-only | grep -v -e ^${TERRAFORM_BASE_DIR})" ];then
-              git checkout pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX}
-              git merge -Xtheirs ${GITHUB_REF_NAME}
-              git add --all
-              git reset ./${TERRAFORM_BASE_DIR}
-              git commit -m "Merge pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX}"
-              git push -f origin HEAD
-              is_commit=true
-            else
-              echo "No commits"
-              is_commit=false
-            fi
-          else
-            echo "branch doesnt exist"
-            if [ -n "$(git diff origin/${BASE_REF} --name-only | grep -v -e ^${TERRAFORM_BASE_DIR})" ]; then
-              git checkout -b pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX} origin/${BASE_REF}
-              git merge -Xtheirs ${GITHUB_REF_NAME}
-              git add --all
-              git reset ./${TERRAFORM_BASE_DIR}
-              git commit -m "Split branch pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX}"
-              git push origin HEAD
-              is_commit=true
-            else
-              echo "No commits"
-              is_commit=false
-            fi
-          fi
-           echo "::set-output name=commit::$is_commit"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACTION_TOKEN }}
-          BRANCH_SUFFIX: tmp
-
-      - if: ${{ steps.split_branch.outcome == 'success' && steps.split_branch.outputs.commit == 'true' }}
-        run: |
-          if [ ! -n "$(gh pr list --base ${BASE_REF} --head pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX} )" ]; then
-            gh pr create --base ${BASE_REF} --head pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX} --title "pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${BRANCH_SUFFIX} -> ${BASE_REF}" --body ""
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACTION_TOKEN }}
-          BRANCH_SUFFIX: tmp
+      - uses: ./.github/actions/split-branch
+        with:
+          base_ref: ${{ env.BASE_REF }}
+          head_ref: ${{ github.ref_name }}
+          github_action_token: ${{ steps.generate_token.outputs.token }}
 
   check_changes:
     runs-on: ubuntu-latest
     outputs:
-      dir: ${{ steps.diff.outputs.dir }}
+      dir: ${{ steps.check-deploy-accounts.outputs.dir }}
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GH_ACTION_TOKEN }}
-      - run: |
-          git fetch origin
-      - run: git diff origin/${BASE_REF} --name-only --diff-filter=d 
-      - id: diff
-        run: |
-          result=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR} | cut -d '/' -f 2 | uniq | awk '{print "\"" $1 "\""}')
-          tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
-          echo "::set-output name=dir::$tmp"
+          token: ${{ steps.generate_token.outputs.token }}
+      - id: check-deploy-accounts
+        uses: ./.github/actions/check-deploy-accounts
+        with:
+          BASE_REF: ${{ env.BASE_REF }}
 
   create_pr:
     needs: check_changes
     runs-on: ubuntu-latest
-    if: ${{ needs.check_changes.outputs.dir != '' }}
+    if: ${{ needs.check_changes.outputs.dir != '[]' && needs.check_changes.outputs.dir != '' }}
     strategy:
       fail-fast: false 
       matrix:
         dir: ${{ fromJson(needs.check_changes.outputs.dir) }}
     steps:
+      - name: Generate github token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GH_ACTION_TOKEN }}
+          token: ${{ steps.generate_token.outputs.token }}
           fetch-depth: 0
-      - run: | 
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git fetch --all
 
-      - run: git branch -a --format="%(refname:short)"
-
-      - id: split_branch
-        continue-on-error: true
-        run: |
-          set +e
-          if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR})" ]; then
-            echo "branch exists"
-            if [ -n "$(git diff origin/pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR} --name-only | grep -e ^${TERRAFORM_BASE_DIR}/${TARGET_DIR})" ];then
-              git checkout pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR}
-              git merge -Xtheirs ${GITHUB_REF_NAME}
-              git add --all
-              git reset ./${TERRAFORM_BASE_DIR}
-              git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}
-              git commit -m "Merge pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR}"
-              git push -f origin HEAD
-            fi
-          else
-            echo "branch doesnt exist"
-            if [ -n "$(git diff origin/${BASE_REF} --name-only | grep -e ^${TERRAFORM_BASE_DIR}/${TARGET_DIR})" ]; then
-              git checkout -b pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR} origin/${BASE_REF}
-              git merge -Xtheirs ${GITHUB_REF_NAME}
-              git add --all
-              git reset ./${TERRAFORM_BASE_DIR}
-              git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}
-              git commit -m "Split branch pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR}"
-              git push origin HEAD
-            fi
-          fi
-        env:
-          TARGET_DIR: ${{ matrix.dir }} 
-
-      - if: ${{ steps.split_branch.outcome == 'success' }}
-        run: |
-          gh pr list --base ${BASE_REF} --head pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR}
-          if [ ! -n "$(gh pr list --base ${BASE_REF} --head pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR} )" ]; then
-            gh pr create --base ${BASE_REF} --head pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR} --title "pr/${BASE_REF}/${GITHUB_REF_NAME#feature/}_${TARGET_DIR} -> ${BASE_REF}" --body ""
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACTION_TOKEN }}
-          TARGET_DIR: ${{ matrix.dir }} 
+      - uses: ./.github/actions/split-branch
+        with:
+          base_ref: ${{ env.BASE_REF }}
+          head_ref: ${{ github.ref_name }}
+          target_dir: ${{ matrix.dir }}
+          github_action_token: ${{ steps.generate_token.outputs.token }}

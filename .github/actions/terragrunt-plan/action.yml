@@ -1,0 +1,116 @@
+name: Terragrunt plan
+description: terragrunt plam
+inputs:
+  aws_profile:
+    required: true
+  taget_dir:
+    description: 'TARGET DIR'
+    required: true
+  git_ssh_command:
+    description: "GIT SSH COMMAND"
+    required: true
+  working_directory:
+    description: 'WORKING DIRECTORY'
+    required: trie
+  tf_workspace:
+    description: "TF WORKSPACE"
+    required: true
+  plan_url:
+    description: "Pull request url"
+    required: false
+  apply_url:
+    description: "Pull request url"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - id: plan
+      run:  ./deploy-terragrunt.sh plan "${TARGET_DIR}" 1> stdout.log 2> stderr.log
+      continue-on-error: true
+      shell: bash
+      working-directory: ${{ inputs.working_dir }}
+      env:
+        AWS_PROFILE: ${{ inputs.AWS_PROFILE }}
+        TARGET_DIR: ${{ inputs.target_dir }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
+        TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
+
+    - run: |
+        if [ "${{ steps.plan.outcome }}" == "success" ]; then
+          echo "# :heavy_check_mark:Terragrunt Plan" > PLAN.md
+          echo '```hcl' >> PLAN.md
+          cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> PLAN.md
+          echo "" >> PLAN.md
+          cat stdout.log | sed -n -e '/^Plan/p' >> PLAN.md
+          echo '```' >> PLAN.md
+          echo "<details>" >> PLAN.md
+          echo "<summary>Details</summary>" >> PLAN.md
+          echo -e "\n" >> PLAN.md
+          echo '```hcl' >> PLAN.md
+          cat stderr.log | sed -n -e '/^Group/p' -e '/- Module/p' >> PLAN.md
+          echo "" >> PLAN.md
+          cat stdout.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> PLAN.md
+          echo '```' >> PLAN.md
+          echo "</details>" >> PLAN.md
+
+          echo -n "<!-- plan -->" >> PLAN.md
+          success=true
+        else
+          echo "# :bangbang:Terragrunt Plan" > PLAN.md
+          echo '```hcl' >> PLAN.md
+          cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | sed -n -e '/^Error/,+4p' >> PLAN.md
+          echo '```' >> PLAN.md
+          echo "<details>" >> PLAN.md
+          echo "<summary>Details</summary>" >> PLAN.md
+          echo -e "\n" >> PLAN.md
+          echo '```hcl' >> PLAN.md
+          cat stderr.log | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" >> PLAN.md
+          echo '```' >> PLAN.md
+          echo "</details>" >> PLAN.md
+          echo -n "<!-- plan -->" >> PLAN.md
+          success=false
+        fi
+
+        if [ -n "$PLAN_URL" ]; then
+          gh api --method PATCH -H "Accept: application/vnd.github+json" ${PLAN_URL} -f body="$(cat ./PLAN.md)"
+        else
+          gh pr comment ${PR_NUMBER} -F ./PLAN.md
+        fi
+
+        if ! "$success" ; then 
+          exit 1
+        fi
+      working-directory: ${{ inputs.working_directory }}
+      shell: bash
+      env:
+        AWS_PROFILE: ${{ inputs.aws_profile }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PLAN_URL: ${{ inputs.plan_url }}
+
+    - if: ${{ steps.plan.outcome == 'success' }} 
+      run: |
+        echo "Click 'Merge pull request' will execute terragrunt apply" > APPLY.md
+        echo "<!-- TARGET_DIR: ${TARGET_DIR} -->" >> APPLY.md
+        echo -n "<!-- apply -->" >> APPLY.md
+
+        if [ -n "${APPLY_URL}" ]; then
+          gh api --method PATCH -H "Accept: application/vnd.github+json" ${APPLY_URL} -f body="$(cat ./APPLY.md)"
+        else
+          gh pr comment ${PR_NUMBER} -F ./APPLY.md
+        fi
+      shell: bash
+      env:
+        TARGET_DIR: ${{ inputs.target_dir }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        APPLY_URL: ${{ inputs.apply_url }}
+
+    - if: ${{ steps.plan.outcome == 'failure' }} 
+      run: |
+        if [ -n "${APPLY_URL}" ]; then
+          gh api --method DELETE -H "Accept: application/vnd.github+json" ${APPLY_URL}
+        fi
+        exit 1
+      shell: bash
+      env:
+        APPLY_URL: ${{ inputs.applu_url }}

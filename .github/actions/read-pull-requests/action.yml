@@ -1,0 +1,26 @@
+name: Read pull requests
+description: Read pull requests
+inputs:
+  base_ref:
+    required: true
+  terraform_base_dir:
+    required: false
+    default: terraform
+outputs:
+  init-url: 
+    value: ${{ steps.read-pr.outputs.init-url }}
+  plan-url:
+    value:  ${{ steps.read-pr.outputs.plan-url }}
+  apply-url: 
+    value: ${{ steps.read-pr.outputs.apply-url }}
+  target_dir: 
+    value: ${{ steps.read-pr.outputs.target_dir }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: read_pr
+      run: bash ${{ github.action_path }}/main.sh
+      shell: bash
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}

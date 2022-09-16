@@ -1,0 +1,31 @@
+name: Check deploy accounts
+description: Check deploy accounts
+inputs:
+  base_ref:
+    required: true
+  terraform_base_dir:
+    required: false
+    default: terraform
+outputs:
+  dir: 
+    value: ${{ steps.diff.outputs.dir }}
+
+runs:
+  using: "composite"
+  steps:
+    - run: git fetch --all
+      shell: bash
+    - run: git diff origin/${BASE_REF} --name-only --diff-filter=d 
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+    - id: diff
+      run: |
+        set +e
+        result=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR} | cut -d '/' -f 2 | uniq | awk '{print "\"" $1 "\""}')
+        tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
+        echo "::set-output name=dir::$tmp"
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+        TERRAFORM_BASE_DIR: ${{ inputs.terraform_base_dir }}

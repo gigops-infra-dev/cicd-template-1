@@ -60,7 +60,8 @@ jobs:
           aws_region: ap-northeast-1
           ssh_key: ${{ secrets.RSA }}
 
-      - uses: ./.github/actions/read-pull-requests
+      - id: read-pr
+        uses: ./.github/actions/read-pull-requests
         with:
           base_ref: ${{ github.base_ref }}
           terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
@@ -73,9 +74,9 @@ jobs:
           target_dir: ${{ needs.check_changes.outputs.dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          init_url: ${{ needs.check_changes.outputs.init-url }}
-          plan_url: ${{ needs.check_changes.outputs.plan-url }}
-          apply_url: ${{ needs.check_changes.outputs.apply-url }}
+          init_url: ${{ steps.read-pr.outputs.init-url }}
+          plan_url: ${{ steps.read-pr.outputs.plan-url }}
+          apply_url: ${{ steps.read-pr.outputs.apply-url }}
 
       - if: ${{ steps.init.outcome == 'success' }} 
         uses: ./.github/actions/terragrunt-plan 
@@ -85,8 +86,8 @@ jobs:
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
-          plan_url: ${{ needs.check_changes.outputs.plan-url }}
-          apply_url: ${{ needs.check_changes.outputs.apply-url }}
+          plan_url: ${{ steps.read-pr.outputs.plan-url }}
+          apply_url: ${{ steps.read-pr.outputs.apply-url }}
 
   auto-merge:
     runs-on: ubuntu-latest

@@ -43,7 +43,8 @@ runs:
         fi
       shell: bash
       env:
+        TERRAFORM_BASE_DIR: ${{ inputs.terraform_base_dir }}
         GITHUB_TOKEN: ${{ inputs.github_action_token }}
-        TARGET_DIR: ${{ inputs.target_dir}}
+        TARGET_DIR: ${{ inputs.target_dir }}
         BASE_REF: ${{ inputs.base_ref }}
         HEAD_REF: ${{ inputs.head_ref }}

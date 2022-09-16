@@ -62,9 +62,6 @@ jobs:
 
       - id: read-pr
         uses: ./.github/actions/read-pull-requests
-        with:
-          base_ref: ${{ github.base_ref }}
-          terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
 
       - id: init
         uses: ./.github/actions/terragrunt-init

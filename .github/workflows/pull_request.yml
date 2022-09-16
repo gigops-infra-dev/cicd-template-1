@@ -75,6 +75,7 @@ jobs:
           init_url: ${{ needs.check_changes.outputs.init-url }}
           plan_url: ${{ needs.check_changes.outputs.plan-url }}
           apply_url: ${{ needs.check_changes.outputs.apply-url }}
+          is_write_pr: true
 
       - if: ${{ steps.init.outcome == 'success' }} 
         uses: ./.github/actions/terragrunt-plan 

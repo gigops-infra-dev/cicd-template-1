@@ -28,7 +28,7 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     needs: check-targets
-    if: ${{ needs.check-targets.outputs.target-dir != '' }}
+    if: ${{ needs.check-targets.outputs.target_dir != '' }}
     steps:
       - name: Generate github token
         id: generate_token

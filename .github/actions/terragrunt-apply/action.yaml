@@ -22,8 +22,6 @@ inputs:
     required: true
   head_ref:
     required: true
-  github_action_token:
-    required: true
 
 runs:
   using: "composite"
@@ -36,7 +34,7 @@ runs:
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
         TARGET_DIR: ${{ inputs.target_dir }}
-        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }} 
         TF_WORKSPACE: ${{ inputs.tf_workspace }}
 
     - run: |

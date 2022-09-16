@@ -3,7 +3,7 @@ description: Read pull requests
 inputs:
   bot_name:
     required: false
-    default: tf-action[bot]
+    default: github-actions[bot]
 outputs:
   init_url: 
     value: ${{ steps.read-pr.outputs.init_url }}

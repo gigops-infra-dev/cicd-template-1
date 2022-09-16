@@ -24,9 +24,6 @@ jobs:
       - uses: actions/checkout@v3
       - id: check
         uses: ./.github/actions/read-pull-requests
-        with:
-          base_ref: ${{ github.base_ref }}
-          terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
 
   apply:
     runs-on: ubuntu-latest

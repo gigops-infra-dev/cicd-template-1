@@ -1,11 +1,6 @@
 name: Read pull requests
 description: Read pull requests
 inputs:
-  base_ref:
-    required: true
-  terraform_base_dir:
-    required: false
-    default: terraform
   bot_name:
     required: false
     default: tf-action[bot]
@@ -28,3 +23,4 @@ runs:
       env:
         PR_NUMBER: ${{ github.event.pull_request.number }}
         BOT_NAME: ${{ inputs.bot_name }}
+        GITHUB_REPOSITORY: ${{ github.repository }}

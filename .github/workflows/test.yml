@@ -7,6 +7,7 @@ jobs:
   action_test:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
     - uses: ./.github/actions/generate-github-app-token
       with:
         app_id: ${{ secrets.app_id }}

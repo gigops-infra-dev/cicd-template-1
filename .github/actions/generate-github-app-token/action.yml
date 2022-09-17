@@ -1,0 +1,15 @@
+name: Generate github app token
+description: Generate github app token
+inputs:
+  app_id:
+    required: true
+  installation_id:
+    required: true
+  private_key:
+    required: true
+outputs:
+  token:
+    description: GITHUB APP TOKEN
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

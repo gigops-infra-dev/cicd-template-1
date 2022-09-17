@@ -9,12 +9,13 @@ permissions: write-all
 env:
   BASE_REF: staging
   TERRAFORM_BASE_DIR: terraform
+  REPOSITORY: ${{ github.repository }}
 jobs:
   partial_merge:
     runs-on: ubuntu-latest
     steps:
       - id: generate_token
-        uses: ${{ github.repository }}/.github/actions/generate-github-app-token@v0.0.1
+        uses: ${REPOSITORY}/.github/actions/generate-github-app-token@v0.0.1
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}

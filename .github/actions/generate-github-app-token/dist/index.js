@@ -12666,6 +12666,7 @@ axios_1.default
     },
 })
     .then((res) => {
+    console.log(res.data.token);
     core.setOutput("token", res.data.token);
 });
 

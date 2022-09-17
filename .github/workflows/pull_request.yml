@@ -84,7 +84,13 @@ jobs:
     needs: check_changes
     if: ${{ needs.check_changes.outputs.dir == '' }}
     steps:
-      - uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+      - id: generate_token
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        with:
+          app_id: ${{ secrets.app_id }}
+          installation_id: ${{ secrets.installation_id }}
+          private_key: ${{ secrets.private_key }}
+
       - uses: actions/checkout@v3
       - run: gh pr merge ${PR_NUMBER} --merge
         env:

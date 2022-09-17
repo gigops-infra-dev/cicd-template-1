@@ -1,0 +1,18 @@
+name: test
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        required: true
+        default: generate-github-app-token
+
+jobs:
+  action_test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: ./.github/actions/${{ github.event.inputs.name }}
+      with:
+        app_id: ${{ secrets.app_id }}
+        installation_id: {{ secrets.installation_id }}
+        private_key: ${{ secrets.private_key }}

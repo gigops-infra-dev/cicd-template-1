@@ -105,17 +105,6 @@ jobs:
           head_ref: ${{ env.HEAD_REF }}
           github_action_token: ${{ steps.generate_token.outputs.token }}
 
-  clean-branch:
-    runs-on: ubuntu-latest
-    needs: [check-targets, apply]
-    if: ${{ success() && github.head_ref  != 'staging' && github.head_ref != 'main' }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: git push origin --delete ${{ github.head_ref }}
-        
-
   split-branch:
     runs-on: ubuntu-latest
     needs: [check-targets,apply]
@@ -148,3 +137,12 @@ jobs:
           head_ref: ${{ env.HEAD_REF }}
           target_dir: ${{ env.TARGET_DIR }}
           github_action_token: ${{ steps.generate_token.outputs.token }}
+
+  clean-branch:
+    runs-on: ubuntu-latest
+    if: ${{ github.head_ref != 'staging' && github.head_ref != 'main' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git push origin --delete ${{ github.head_ref }}

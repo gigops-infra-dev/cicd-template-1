@@ -11,7 +11,7 @@ jobs:
   action_test:
     runs-on: ubuntu-latest
     steps:
-    - uses: ./.github/actions/${{ github.event.inputs.name }}
+    - uses: ./.github/actions/${{ github.event.inputs.action }}
       with:
         app_id: ${{ secrets.app_id }}
         installation_id: {{ secrets.installation_id }}

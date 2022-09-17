@@ -1,0 +1,24 @@
+{
+  "name": "generate-github-app-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --license licenses.txt"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.9.1",
+    "@actions/exec": "^1.1.1",
+    "axios": "^0.27.2",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.18",
+    "@vercel/ncc": "^0.34.0",
+    "typescript": "^4.8.3"
+  }
+}

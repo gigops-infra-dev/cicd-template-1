@@ -13,13 +13,13 @@ jobs:
   partial_merge:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate github token
-        id: generate_token
-        uses: tibdex/github-app-token@v1
+      - id: generate_token
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
-
+          app_id: ${{ secrets.app_id }}
+          installation_id: ${{ secrets.installation_id }}
+          private_key: ${{ secrets.private_key }}
+          
       - uses: actions/checkout@v3      
         with:
           fetch-depth: 0
@@ -51,12 +51,12 @@ jobs:
       matrix:
         dir: ${{ fromJson(needs.check_changes.outputs.dir) }}
     steps:
-      - name: Generate github token
-        id: generate_token
-        uses: tibdex/github-app-token@v1
+      - id: generate_token
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
+          app_id: ${{ secrets.app_id }}
+          installation_id: ${{ secrets.installation_id }}
+          private_key: ${{ secrets.private_key }}
 
       - uses: actions/checkout@v3
         with:

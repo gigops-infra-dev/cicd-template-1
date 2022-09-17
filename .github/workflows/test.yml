@@ -14,5 +14,3 @@ jobs:
         app_id: ${{ secrets.app_id }}
         installation_id: ${{ secrets.installation_id }}
         private_key: ${{ secrets.private_key }}
-    - run: echo ${{ steps.generate_token.outputs.token }} > ./text
-    - run: cat ./text

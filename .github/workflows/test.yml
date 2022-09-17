@@ -8,8 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/generate-github-app-token
+    - id: generate_token
+      uses: ./.github/actions/generate-github-app-token
       with:
         app_id: ${{ secrets.app_id }}
         installation_id: ${{ secrets.installation_id }}
         private_key: ${{ secrets.private_key }}
+    - run: echo ${{ steps.generate_token.outputs.token }}

@@ -11,20 +11,7 @@ permissions: write-all
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TERRAFORM_BASE_DIR: terraform
-jobs:
-  generate_token:
-    runs-on: ubuntu-latest
-    outputs:
-      token: ${{ steps.generate_token.outputs.token }}
-    steps:
-    - uses: actions/checkout@v3
-    - id: generate_token
-      uses: ./.github/actions/generate-github-app-token
-      with:
-        app_id: ${{ secrets.app_id }}
-        installation_id: ${{ secrets.installation_id }}
-        private_key: ${{ secrets.private_key }}
-        
+jobs:   
   check_changes:
     runs-on: ubuntu-latest
     outputs:
@@ -97,8 +84,9 @@ jobs:
     needs: [check_changes, generate_token]
     if: ${{ needs.check_changes.outputs.dir == '' }}
     steps:
+      - uses: ezqy/ghaction/generate-github-app-token@v0.0.1
       - uses: actions/checkout@v3
       - run: gh pr merge ${PR_NUMBER} --merge
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          GITHUB_TOKEN: ${{ needs.generate_token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}

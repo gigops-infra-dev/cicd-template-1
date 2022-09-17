@@ -81,7 +81,7 @@ jobs:
 
   auto-merge:
     runs-on: ubuntu-latest
-    needs: [check_changes, generate_token]
+    needs: check_changes
     if: ${{ needs.check_changes.outputs.dir == '' }}
     steps:
       - uses: ezqy/ghaction/generate-github-app-token@v0.0.1

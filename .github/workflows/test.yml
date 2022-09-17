@@ -10,5 +10,5 @@ jobs:
     - uses: ./.github/actions/generate-github-app-token
       with:
         app_id: ${{ secrets.app_id }}
-        installation_id: {{ secrets.installation_id }}
+        installation_id: ${{ secrets.installation_id }}
         private_key: ${{ secrets.private_key }}

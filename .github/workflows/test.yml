@@ -1,0 +1,24 @@
+name: test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  action_test:
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.generate_token.outputs.token }}
+    steps:
+    - uses: actions/checkout@v3
+    - id: generate_token
+      uses: ./.github/actions/generate-github-app-token
+      with:
+        app_id: ${{ secrets.app_id }}
+        installation_id: ${{ secrets.installation_id }}
+        private_key: ${{ secrets.private_key }}
+
+  token:
+    runs-on: ubuntu-latest
+    needs: action_test
+    steps:
+      - run: echo ${{ steps.action_test.outputs.token}}

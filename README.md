@@ -30,11 +30,8 @@ Github actions for Terragrunt flow.
     - [x] terragrunt init (staging environment)
     - [x] terragurnt apply (staging environment)
       - [ ] ~~(If terragrunt apply failed, revert commmit and create github issues.)~~ 
-        - Difficulty in handling revert. some resources may have already been applied even if apply fails.
-        - Apply past commit again?
-          - What if it fails event more??
       - [x] (If terragrunt apply successed, create PR for staging to main )
-    - [ ] Delete merged branch.
+    - [x] Delete merged branch.
 3. After create PR for staging to main
     - [x] (Same as 1, but the target is the AWS production environment.)
 4. After merge staging into main
@@ -100,10 +97,10 @@ flowchart TD
 - [ [ One-click creation of github actions environment.
   - Automated github secret registration, etc.
 - [ ] Terraform state lock (dynamo db).
-- [ ] Modularization of github actions.
+- [x] Modularization of github actions.
 - [x] Flow diagrams, etc..
 - [ ] Authority minimization.
-- [ ] Use GitHub Apps instead of Personal Access token.
+- [x] Use GitHub Apps instead of Personal Access token.
 
 ## Install
 0. Fork this repository.
@@ -112,7 +109,8 @@ flowchart TD
     - `$ git push origin staging`
     - `$ git checkout -b feature/<any>`
 2. Setup github
-    - Create personal access token (full-control) and register secret named `GH_ACTION_TOKEN` to your repository
+    - ~~Create personal access token (full-control) and register secret named `GH_ACTION_TOKEN` to your repository~~
+    - Create Github Apps and install to your repository. And, register secret named `APP_ID` and `INSTALLATION_ID`, `PRIVATE_KEY`.
     - Receive the ssh key of the repository that manages the terraform module from the administrator and register the secret named `RSA`.
 3. [Setup AWS](./aws/init)
 4. Copy actions.json.sample to actions.json

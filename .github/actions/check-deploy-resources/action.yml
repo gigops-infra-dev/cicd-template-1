@@ -28,17 +28,29 @@ runs:
       continue-on-error: true
       run: |
         set +e
-        diff=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/variables/${TF_WORKSPACE}.yml)
-        if [ -n "${diff}" ]; then
-          dir='all'
+        if [ "${SYNCHRONIZED}" ]; then
+          diff=$(git diff HEAD^ --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET} | grep -i -v ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl)
+          if [ -n "${diff}" ]; then
+            dir='all'
+          else
+            dir=$(git diff HEAD^ --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl | cut -d '/' -f 4 | uniq | tr '\n' ' ')
+          fi
+          echo "::set-output name=dir::$dir"        
         else
-          dir=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl | cut -d '/' -f 4 | uniq | tr '\n' ' ')
+          diff=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET} | grep -i -v ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl)
+          if [ -n "${diff}" ]; then
+            dir='all'
+          else
+            dir=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl | cut -d '/' -f 4 | uniq | tr '\n' ' ')
+          fi
+          echo "::set-output name=dir::$dir"
         fi
-        echo "::set-output name=dir::$dir"
       shell: bash
       env:
         BASE_REF: ${{ inputs.base_ref }}
         TERRAFORM_BASE_DIR: ${{ inputs.terraform_base_dir }}
         GHACTION_TARGET: ${{ inputs.ghaction_target }}
         TF_WORKSPACE: ${{ inputs.tf_workspace }}
+        SYNCHRONIZED: ${{ github.event.pull_request.synchronize }}
+        
 

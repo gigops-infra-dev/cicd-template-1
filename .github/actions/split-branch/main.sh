@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set +e
 set -x
 
 isTmp() {
@@ -39,10 +39,7 @@ main(){
   fi
 
   echo "push"
-
-  set +e
   git push origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
-  set -e
 
   if [ $? == 0 ]; then
     echo "success"

@@ -18,6 +18,11 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - run: git pull origin ${HEAD_REF}
+      shell: bash
+      env:
+        HEAD_REF: ${{ inputs.head_ref }}
+
     - id: set-envs
       run: bash ${{ github.action_path }}/main.sh
       shell: bash

@@ -18,6 +18,9 @@ jobs:
       dir: ${{ steps.diff.outputs.dir }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:
@@ -38,6 +41,8 @@ jobs:
     if: ${{ needs.check_changes.outputs.dir != '' }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:
@@ -82,7 +87,7 @@ jobs:
   auto-merge:
     runs-on: ubuntu-latest
     needs: check_changes
-    if: ${{ needs.check_changes.outputs.dir == '' }}
+    if: ${{ needs.check_changes.outputs.dir == '' && github.base_ref != 'main' }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1

@@ -82,7 +82,7 @@ jobs:
   create-pr:
     runs-on: ubuntu-latest
     needs: check-targets
-    if: ${{ github.event.pull_request.merged && needs.check-targets.outputs.target_dir == '' && github.base_ref  == 'staging' }}
+    if: ${{ github.event.pull_request.merged && (needs.check-targets.outputs.target_dir == '' || needs.check-targets.outputs.target_dir == '[]') && github.base_ref  == 'staging' }}
     env:
       BASE_REF: main
       HEAD_REF: staging
@@ -108,7 +108,7 @@ jobs:
   split-branch:
     runs-on: ubuntu-latest
     needs: check-targets
-    if: ${{ github.event.pull_request.merged && success() && github.base_ref  == 'staging' }}
+    if: ${{ github.event.pull_request.merged && success() && needs.check-targets.outputs.target_dir != ''  && github.base_ref  == 'staging' }}
     env:
       BASE_REF: main
       HEAD_REF: staging
@@ -158,3 +158,44 @@ jobs:
           HEAD_REF: ${{ github.head_red }}
       - if: ${{ steps.check_branch_exists.outcome == 'success' }}
         run: git push origin --delete ${{ github.head_ref }}
+
+  synchronize:
+    runs-on: ubuntu-latest
+    outputs:
+      branches: ${{ steps.check_child_branches.outputs.branches }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git fetch --all
+      - id: check_child_branches
+        run: |
+          set +e
+          result=$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF} | cut -d '/' -f 2,3,4 | awk '{print "\"" $1 "\""}')
+          tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
+          echo "::set-output name=branches::$tmp"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+
+  reverse_merge:
+    needs: synchronize
+    runs-on: ubuntu-latest
+    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' }}
+    strategy:
+      fail-fast: false 
+      matrix:
+        branch: ${{ fromJson(needs.synchronize.outputs.branches) }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ matrix.branch }}
+      - run: | 
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git fetch --all
+      - run: | 
+          git merge origin/${BASE_REF}
+          git push origin HEAD
+        env:
+          BASE_REF: ${{ github.base_ref }}

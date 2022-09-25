@@ -30,9 +30,6 @@ Github actions for Terragrunt flow.
     - [x] terragrunt init (staging environment)
     - [x] terragurnt apply (staging environment)
       - [ ] ~~(If terragrunt apply failed, revert commmit and create github issues.)~~ 
-        - Difficulty in handling revert. some resources may have already been applied even if apply fails.
-        - Apply past commit again?
-          - What if it fails event more??
       - [x] (If terragrunt apply successed, create PR for staging to main )
     - [x] Delete merged branch.
 3. After create PR for staging to main

@@ -186,10 +186,17 @@ jobs:
       matrix:
         branch: ${{ fromJson(needs.synchronize.outputs.branches) }}
     steps:
+      - id: generate_token
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        with:
+          app_id: ${{ secrets.app_id }}
+          installation_id: ${{ secrets.installation_id }}
+          private_key: ${{ secrets.private_key }}
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ matrix.branch }}
+          token: ${{ steps.generate_token.outputs.token }}
       - run: | 
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"

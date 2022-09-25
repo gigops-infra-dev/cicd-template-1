@@ -18,6 +18,8 @@ jobs:
       dir: ${{ steps.diff.outputs.dir }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:

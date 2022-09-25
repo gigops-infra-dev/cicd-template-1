@@ -1,0 +1,25 @@
+name: Create pull request
+description: Create pull request
+inputs:
+  github_action_token:
+    required: true
+  base_ref:
+    required: true
+  head_ref:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        if [ ! -n "$(gh pr list --base ${BASE_REF} --head ${HEAD_REF} )" ]; then
+          gh pr create --base ${BASE_REF} \
+          --head ${HEAD_REF} \
+          --title "${HEAD_REF} -> ${BASE_REF}" \
+          --body "${{ github.event.head_commit.message }}"
+        fi
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_action_token }}
+        BASE_REF: ${{ inputs.base_ref }}
+        HEAD_REF: ${{ inputs.head_ref }}

@@ -35,19 +35,22 @@ main(){
   git reset HEAD^ ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}
-  fi
-
-  echo "commit"
-  git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
-  if [ $? != 0 ]; then
-    echo "no changes"
-    echo "::set-output name=commit::false"
-    exit 0
+    git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
 
   echo "push"
-  git push -f origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
-  echo "::set-output name=commit::true"
+
+  set +e
+  git push origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  set -e
+
+  if [ $? == 0 ]; then
+    echo "success"
+    echo "::set-output name=commit::true"
+  else
+    echo "no changes"
+    echo "::set-output name=commit::false"
+  fi
 }
 
 main

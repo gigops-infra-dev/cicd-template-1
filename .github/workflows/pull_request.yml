@@ -12,7 +12,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TERRAFORM_BASE_DIR: terraform
 jobs:   
-  check_changes:
+  get-changes:
     runs-on: ubuntu-latest
     outputs:
       dir: ${{ steps.diff.outputs.dir }}
@@ -21,6 +21,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
+      - run: git pull origin ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:
@@ -37,12 +38,13 @@ jobs:
 
   plan:
     runs-on: ubuntu-latest
-    needs: check_changes
-    if: ${{ needs.check_changes.outputs.dir != '' && github.head_ref != 'staging' }}
+    needs: get-changes
+    if: ${{ needs.get-changes.outputs.dir != '' && github.head_ref != 'staging' }}
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
+      - run: git pull origin ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:
@@ -66,7 +68,7 @@ jobs:
         with:
           aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
-          target_dir: ${{ needs.check_changes.outputs.dir }}
+          target_dir: ${{ needs.get-changes.outputs.dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           init_url: ${{ steps.read-pr.outputs.init_url }}
@@ -77,7 +79,7 @@ jobs:
         uses: ./.github/actions/terragrunt-plan 
         with:
           aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
-          target_dir: ${{ needs.check_changes.outputs.dir }}
+          target_dir: ${{ needs.get-changes.outputs.dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
@@ -86,8 +88,8 @@ jobs:
 
   auto-merge:
     runs-on: ubuntu-latest
-    needs: check_changes
-    if: ${{ needs.check_changes.outputs.dir == '' && github.base_ref != 'main' }}
+    needs: get-changes
+    if: ${{ needs.get-changes.outputs.dir == '' && github.base_ref != 'main' }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1
@@ -104,8 +106,8 @@ jobs:
 
   close-pr:
     runs-on: ubuntu-latest
-    needs: check_changes
-    if: ${{ needs.check_changes.outputs.dir != '' && github.head_ref == 'staging' }}
+    needs: get-changes
+    if: ${{ needs.get-changes.outputs.dir != '' && github.head_ref == 'staging' }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1

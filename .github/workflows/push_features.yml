@@ -11,7 +11,7 @@ env:
   TERRAFORM_BASE_DIR: terraform
   REPOSITORY: ${{ github.repository }}
 jobs:
-  check_changes:
+  get-changes:
     runs-on: ubuntu-latest
     outputs:
       dir: ${{ steps.check-deploy-accounts.outputs.dir }}
@@ -22,14 +22,14 @@ jobs:
         with:
           BASE_REF: ${{ env.BASE_REF }}
 
-  create_pr_for_terraform:
-    needs: check_changes
+  create-pr-for-terraform:
+    needs: get-changes
     runs-on: ubuntu-latest
-    if: ${{ needs.check_changes.outputs.dir != '[]' && needs.check_changes.outputs.dir != '' }}
+    if: ${{ needs.get-changes.outputs.dir != '[]' && needs.get-changes.outputs.dir != '' }}
     strategy:
       fail-fast: false 
       matrix:
-        dir: ${{ fromJson(needs.check_changes.outputs.dir) }}
+        dir: ${{ fromJson(needs.get-changes.outputs.dir) }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1
@@ -50,10 +50,10 @@ jobs:
           target_dir: ${{ matrix.dir }}
           github_action_token: ${{ steps.generate_token.outputs.token }}
 
-  create_pr_for_auto_merge:
-    needs: check_changes
+  create-pr-for-auto-merge:
+    needs: get-changes
     runs-on: ubuntu-latest
-    if: ${{ needs.check_changes.outputs.dir == '[]' || needs.check_changes.outputs.dir == '' }}
+    if: ${{ needs.get-changes.outputs.dir == '[]' || needs.get-changes.outputs.dir == '' }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1

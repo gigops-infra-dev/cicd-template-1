@@ -46,7 +46,7 @@ Github actions for Terragrunt flow.
     - [x] Split and re-commit branches when changes are pushed across environments.
 
 ## Bug
-- When a file in the hcl folder is modified , terraform doesnt run.
+- [x] When a file in the hcl folder is modified , terraform doesnt run.
 
 ## Flow-chart
 
@@ -54,41 +54,39 @@ Github actions for Terragrunt flow.
 
 ```mermaid
 flowchart TD
-  A(Push origin feature/xxx)  --> A2[Split branch by target directory] --> A3{Loop?}
-  A3 -- YES --> B{Does splitted branch exist?}
-  A --> B2(Push to staging except terraform) --> B3[Create PR] --> B4(End)
-  B -- Yes --> C1[Merge branch] --> F{Does PR exist?}
-  B -- No --> D1[Create branch] --> F
-  F -- Yes --> C2[No actions] --> G[Loop] --> A3;
-  F -- No --> D2[Create PR] --> G[Loop]
-  A3 -- No --> H(End)
+  A(Push feature branch) --> B[Get changes] --> C{Are there any differences in terraform?}
+  C -- No --> D[Create pr for auto merge] --> F(End)
+  C -- Yes --> G[Split branches] --> E[Create pr for terraform]  --> F(End)
 ```
 
 - When PR is opened or synchronized.
 ```mermaid
 flowchart TD
-  A(PR Open or synchronized) --> B[READ action.json] --> C[git diff] --> D{Is there a difference?}
-  D -- No --> E(Merge automatically) --> b(end)
-  D -- YES --> F[Check for comments on PR] --> P[Init terraform workspace] --> G[Terragurnt init] --> H[Create/update PR comments for init] --> I{Did succeed init?}
-  I -- No --> J[Remove comments for plan and apply, if exists] --> c(End)
-  I -- Yes --> K[Terragrunt plan] --> L[Create/update PR comments for plan] --> M{Did succeed plan?}
-  M -- No --> N[Remove comments for apply, if exists] --> a(End)
-  M -- Yes --> O[Create/update PR comments for apply] --> a(End)
+  A(Create PR) --> B[Get changes] --> C{Are there any differences in terraform?}
+  C -- No --> D{Is base_ref equal to main?}
+  D -- Yes --> E[No actions] --> F(End)
+  D -- No --> G[Auto merge PR] --> F(End)
+  C -- Yes --> I[Terraform plan] --> F(End)
 ```
 
 - When PR is closed
-  - Behavior in case of failure needs to be reconsidered
 ```mermaid
 flowchart TD
-  A(PR closed) --> B[Check terraform target] --> C[Get variables hidden within PR comments] --> D{Is there a difference?}
-  D -- No --> E{Is base branch staging?}
-  E -- No --> a(end)
-  E -- Yes --> F[Create PR to main] --> a(end)
-  D -- Yes --> G[Read action.json] --> H[Terragrunt init] --> I{Did succeed init?}
-  I -- No --> J[Remove comments for plan and apply] --> b(End)
-  I -- Yes --> K[Terragrunt apply] --> L[Create/update PR comments for apply] --> M{Did succeed apply?}
-  M -- No --> N[Remove comments for plan and apply] --> O[Create issue] --> c(End)
-  M -- Yes --> P[Create PR to main] --> c(end)
+  A(Merge PR) --> B[Check-targets] --> C{Are there differences in terraform?}
+  C -- No --> D{Is base_ref equal to staging?}
+  D -- No --> E[No actions] --> F(End)
+  D -- Yes --> G[Create PR] --> F
+  C -- Yes --> H[Terraform apply] --> I{Success?}
+  I -- No --> J[Create issue] --> K(End)
+  I -- Yes --> M{Is base_ref equal to staging?}
+  M -- Yes -->L[Split branch and create new PR] --> K(End)
+  M -- No --> K(End)
+  A --> N{Is base_ref equal to main or staging?}
+  N -- Yes --> T(End)
+  N -- No --> O[Crean branch] --> T(End)
+  A --> P[Synchronize] --> Q{Is there any branch child of base_ref?}
+  Q -- No --> R[No actions] --> U(End)
+  Q -- Yes --> S[Reverse merge] --> U(End)
 ```
 
 ## Vision for the future

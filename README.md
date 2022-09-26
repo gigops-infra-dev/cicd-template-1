@@ -125,4 +125,3 @@ flowchart TD
 7. Access your repository and enable github actions (Actions tab)
 8. `git add --all && git commit -m "hello cicd" && git push origin HEAD`
 9. Check your github PR!!
-

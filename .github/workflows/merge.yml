@@ -180,10 +180,11 @@ jobs:
           set +e
           set -x
           result=$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF} | cut -d '/' -f 2,3,4 | awk '{print "\"" $1 "\""}')
-          tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
+          tmp=$(echo "[${result//$'\n'/,}]" | grep -v ${HEAD_REF} | jq -c )
           echo "::set-output name=branches::$tmp"
         env:
           BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
 
   reverse_merge:
     needs: synchronize

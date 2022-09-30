@@ -212,7 +212,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch --all
-      - if ${{ matrix.branch != github.head_ref }}
+      - if: ${{ matrix.branch != github.head_ref }}
         run: | 
           target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
           if [ ! -n "$(git diff origin/${BASE_REF} ${REF_THIS_PR} --name-only | grep -i ^${TERRAFORM_BASE_DIR}/${target})" ]; then

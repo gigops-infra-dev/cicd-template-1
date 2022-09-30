@@ -44,7 +44,6 @@ jobs:
     if: ${{ needs.get-changes.outputs.dir != '' && needs.get-changes.outputs.aws_role_arn != '' }}
     steps:
       - uses: actions/checkout@v3
-      - run: git pull origin ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:

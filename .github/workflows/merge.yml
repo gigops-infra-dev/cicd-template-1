@@ -214,7 +214,7 @@ jobs:
           git fetch --all
       - if: ${{ matrix.branch != github.head_ref }}
         run: | 
-          git merge -Xtheir origin/${BASE_REF}
+          git merge -Xtheirs origin/${BASE_REF}
           git push origin HEAD
 
         env:

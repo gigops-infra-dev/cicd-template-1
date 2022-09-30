@@ -34,7 +34,7 @@ main(){
   git add --all
   git reset HEAD^ ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
-    git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}
+    git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
 

@@ -181,6 +181,7 @@ jobs:
       - id: check_child_branches
         run: |
           set +e
+          set -x
           result=$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF} | cut -d '/' -f 2,3,4 | awk '{print "\"" $1 "\""}')
           tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
           echo "::set-output name=branches::$tmp"

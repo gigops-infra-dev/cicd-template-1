@@ -1,7 +1,7 @@
 remote_state {
   backend = "s3"
   config = {
-    bucket  = "tf-state-bucket-${get_aws_account_id()}-us-east-1"
+    bucket  = "tf-state-bucket-${get_aws_account_id()}"
     profile = get_env("AWS_PROFILE")
     key     = "${path_relative_to_include()}.tfstate"
     region  = "us-east-1"

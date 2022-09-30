@@ -34,7 +34,7 @@ inputs = {
 
   tags = {
     Terraform   = "true"
-    Environment = "3"
+    Environment = "4"
   }
 }
 

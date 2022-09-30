@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 json="actions.json"
 
 target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')

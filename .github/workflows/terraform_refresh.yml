@@ -1,0 +1,62 @@
+name: Terragrunt refresh
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
+        type: choise
+        options:
+        - main
+        - staging
+      target_dir:
+        required: true
+        type: string
+      terraform_base_dir:
+        required: true
+        type: choise
+        options:
+        - terraform
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    needs: check-targets
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v1
+      - id: setup-envs
+        uses: ./.github/actions/setup-envs
+        with:
+          base_ref: ${{ inputs.branch }}
+          head_ref: ${{ inputs.target_dir }}
+      - uses: ./.github/actions/setup-terraform
+        with:
+          working_directory: ./${{ inputs.terraform_base_dir }}/${{ steps.setup-envs.outputs.ghaction_target }}
+      - uses: ./.github/actions/setup-aws-credentials
+        with:
+          aws_role_arn: ${{ steps.setup-envs.outputs.aws_role_arn }}
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
+          aws_region: ap-northeast-1
+          ssh_key: ${{ secrets.RSA }}
+
+      - id: init
+        uses: ./.github/actions/terragrunt-init
+        with:
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
+          working_directory: ./${{ inputs.terraform_base_dir }}/${{ steps.setup-envs.outputs.ghaction_target }}
+          target_dir: all
+          git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
+          tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
+          is_write_pr: false
+
+      - id: apply
+        if: ${{ steps.init.outcome == 'success' }} 
+        uses: ./.github/actions/terragrunt-apply
+        with:
+          aws_profile: ${{ steps.setup-envs.outputs.aws_profile }}
+          target_dir: all
+          git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
+          tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
+          working_directory: ./${{ inputs.terraform_base_dir }}/${{ steps.setup-envs.outputs.ghaction_target }}
+          refresh: true

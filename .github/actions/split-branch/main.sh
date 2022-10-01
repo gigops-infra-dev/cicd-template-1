@@ -50,6 +50,7 @@ main(){
   #   fi
   #   git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   # fi
+  git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   git push origin HEAD
 
   if [ $? == 0 ]; then

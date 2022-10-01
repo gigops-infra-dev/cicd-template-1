@@ -35,7 +35,7 @@ main(){
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     diff=$(git diff staging --name-only --diff-filter=D | grep ${TERRAFORM_BASE_DIR}/${TARGET_DIR}/)
     if [ -n "${diff}" ];
-      echo "${diff}" | while read line: do
+      echo "${diff}" | while read line; do
         git rm $line
       done
     fi

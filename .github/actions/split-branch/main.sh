@@ -37,7 +37,7 @@ main(){
   fi
   git reset --hard HEAD
   git rebase --onto origin/${BASE_REF} ${HEAD_REF}
-  git push -f origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  git push -f origin HEAD
 
   if [ $? == 0 ]; then
     echo "success"

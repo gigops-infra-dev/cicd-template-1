@@ -217,7 +217,6 @@ jobs:
         run: | 
           set -x
           git merge origin/${BASE_REF}
-          git reset ORIG_HEAD ./terraform/${target}/
           git push origin HEAD
         env:
           BASE_REF: ${{ github.base_ref }}

@@ -7,6 +7,8 @@ on:
       - staging
     types: [opened,synchronize]
 
+concurrency: ${{ github.head_ref  }}
+
 permissions: write-all
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -16,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       dir: ${{ steps.diff.outputs.dir }}
+      aws_role_arn: ${{ steps.setup-envs.outputs.aws_role_arn}}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
       - run: git pull origin ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
@@ -39,12 +41,9 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     needs: get-changes
-    if: ${{ needs.get-changes.outputs.dir != '' && github.head_ref != 'staging' }}
+    if: ${{ needs.get-changes.outputs.dir != '' && needs.get-changes.outputs.aws_role_arn != '' }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-      - run: git pull origin ${{ github.head_ref }}
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:

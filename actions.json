@@ -4,7 +4,7 @@
       "ghaction_target": "sample",
       "main": {
         "aws_profile": "default",
-        "aws_role_arn": "arn:aws:iam::479255487053:role/GitHubActions_Terraform_action_terraform_apply",
+        "aws_role_arn": "",
         "tf_workspace": "tc3-cicd-prod"
       },
       "staging": {
@@ -17,12 +17,12 @@
       "ghaction_target": "sample2",
       "main": {
         "aws_profile": "default",
-        "aws_role_arn": "arn:aws:iam::479255487053:role/GitHubActions_Terraform_cicd_terraform_apply",
+        "aws_role_arn": "",
         "tf_workspace": "tc3-cicd-prod"
       },
       "staging": {
         "aws_profile": "default",
-        "aws_role_arn": "arn:aws:iam::479255487053:role/GitHubActions_Terraform_cicd_terraform_apply",
+        "aws_role_arn": "arn:aws:iam::479255487053:role/GitHubActions_Terraform_action_terraform_apply",
         "tf_workspace": "tc3-cicd"
       }
     }

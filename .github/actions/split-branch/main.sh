@@ -33,13 +33,13 @@ main(){
   git reset HEAD^ ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
-    diff=$(git diff HEAD ${HEAD_REF} --name-only --diff-filter=D | grep ${TERRAFORM_BASE_DIR}/${TARGET_DIR}/)
+    diff=$(git diff pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} ${HEAD_REF} --name-only --diff-filter=D | grep ${TERRAFORM_BASE_DIR}/${TARGET_DIR}/)
     if [ -n "${diff}" ]; then
       echo "${diff}" | while read line; do
         git rm $line
       done
     fi
-    diff=$(git diff HEAD ${HEAD_REF} --name-only --diff-filter=D | grep -v ${TERRAFORM_BASE_DIR}/)
+    diff=$(git diff pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} ${HEAD_REF} --name-only --diff-filter=D | grep -v ${TERRAFORM_BASE_DIR}/)
     if [ -n "${diff}" ]; then
       echo "${diff}" | while read line; do
         git rm $line

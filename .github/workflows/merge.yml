@@ -179,7 +179,7 @@ jobs:
           set +e
           set -x
           target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
-          result=$(git branch -a --format="%(refname:short)" | grep -v -x ${HEAD_REF} | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
+          result=$(git branch -a --format="%(refname:short)" | grep -E ^origin/pr/${BASE_REF}/.*_${target} | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
           tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
           echo "::set-output name=branches::$tmp"
         env:
@@ -216,7 +216,7 @@ jobs:
       - if: ${{ matrix.branch != github.head_ref }}
         run: | 
           set -x
-          git rebase origin HEAD
+          git rebase origin/${BASE_REF}
           git push origin HEAD
 
         env:

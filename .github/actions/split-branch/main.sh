@@ -30,8 +30,7 @@ checkout() {
 main(){
   option=`setOption`
   checkout "$option"
-  git merge -Xtheirs ${HEAD_REF}
-  git add --all
+  git checkout --theirs ${HEAD_REF} -- .
   git reset HEAD^ ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/

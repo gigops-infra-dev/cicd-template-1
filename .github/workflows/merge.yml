@@ -217,7 +217,7 @@ jobs:
         run: | 
           set -x
           git rebase origin/${BASE_REF}
-          git push origin HEAD
+          git push -f origin HEAD
 
         env:
           BASE_REF: ${{ github.base_ref }}

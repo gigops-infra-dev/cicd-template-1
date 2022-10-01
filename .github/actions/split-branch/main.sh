@@ -33,6 +33,12 @@ main(){
   git reset HEAD^ ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
+    diff=$(git diff staging --name-only --diff-filter=D | grep ${TERRAFORM_BASE_DIR}/${TARGET_DIR}/)
+    if [ -n "${diff}" ];
+      echo "${diff}" | while read line: do
+        git rm $line
+      done
+    fi
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
   git push origin HEAD

@@ -35,9 +35,7 @@ main(){
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
-  git reset --hard HEAD
-  git rebase --onto origin/${BASE_REF} ${HEAD_REF}
-  git push -f origin HEAD
+  git push origin HEAD
 
   if [ $? == 0 ]; then
     echo "success"

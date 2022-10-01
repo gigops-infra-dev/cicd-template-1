@@ -216,9 +216,7 @@ jobs:
       - if: ${{ matrix.branch != github.head_ref }}
         run: | 
           set -x
-          target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
           git merge origin/${BASE_REF}
-          git reset ORIG_HEAD ./terraform/${target}/
           git push origin HEAD
         env:
           BASE_REF: ${{ github.base_ref }}

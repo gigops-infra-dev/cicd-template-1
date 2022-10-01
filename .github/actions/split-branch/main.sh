@@ -30,16 +30,16 @@ checkout() {
 main(){
   option=`setOption`
   checkout "$option"
-  git checkout ${HEAD_REF} -- .
+  git merge ${HEAD_REF}
   git reset ORIG_HEAD ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
-  git rebase --onto origin/${BASE_REF} ${HEAD_REF} pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
   git stash
+  git rebase --onto origin/staging ${HEAD_REF} pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
   echo "push"
-  git push origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  git push -f origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
 
   if [ $? == 0 ]; then
     echo "success"

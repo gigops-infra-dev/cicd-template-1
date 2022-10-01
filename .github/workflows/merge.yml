@@ -216,9 +216,9 @@ jobs:
       - if: ${{ matrix.branch != github.head_ref }}
         run: | 
           set -x
-          git rebase origin/${BASE_REF}
-          git push -f origin HEAD
-
+          git merge origin/${BASE_REF}
+          git reset ORIG_HEAD ./terraform/${target}/
+          git push origin HEAD
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ matrix.branch }}

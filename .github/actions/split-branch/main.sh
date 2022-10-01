@@ -36,7 +36,7 @@ main(){
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
-  git rebase --onto ${BASE_REF} ${HEAD_REF} pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  git rebase --onto origin/${BASE_REF} ${HEAD_REF} pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
 
   echo "push"
   git push origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}

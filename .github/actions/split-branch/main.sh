@@ -30,9 +30,9 @@ main(){
   option=`setOption`
   checkout "$option"
   ls=$(ls ${TERRAFORM_BASE_DIR} | grep -v -E ^${TARGET_DIR}$ )
-  git checkout --theirs ${HEAD_REF} .
+  git checkout --no-overray --theirs ${HEAD_REF} .
   echo "${ls}" | while read line; do 
-    git restore HEAD^ -- ./${TERRAFORM_BASE_DIR}/${line}
+    git restore -s HEAD^ ${TERRAFORM_BASE_DIR}/${line}/*
   done
   # if ! isTmp; then
   #   git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/

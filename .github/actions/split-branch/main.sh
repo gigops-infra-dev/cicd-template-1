@@ -30,7 +30,7 @@ main(){
   option=`setOption`
   checkout "$option"
   ls=$(ls ${TERRAFORM_BASE_DIR} | grep -v -E ^${TARGET_DIR}$ )
-  git checkout --no-overray --theirs ${HEAD_REF} .
+  git checkout --no-overlay --theirs ${HEAD_REF} .
   echo "${ls}" | while read line; do 
     git restore -s HEAD^ ${TERRAFORM_BASE_DIR}/${line}/*
   done

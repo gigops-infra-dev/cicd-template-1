@@ -1,5 +1,4 @@
 #!/bin/bash
-set +e
 set -x
 
 isTmp() {
@@ -30,15 +29,13 @@ checkout() {
 main(){
   option=`setOption`
   checkout "$option"
-  git checkout --theirs ${HEAD_REF} -- .
-  git reset HEAD^ ./${TERRAFORM_BASE_DIR}
+  git merge -Xtheirs ${HEAD_REF}
+  git reset ORIG_HEAD ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
-
-  echo "push"
-  git push origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  git push origin HEAD
 
   if [ $? == 0 ]; then
     echo "success"

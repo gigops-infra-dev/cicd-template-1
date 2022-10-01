@@ -36,8 +36,7 @@ main(){
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
   git reset --hard HEAD
-  git fetch origin ${BASE_REF}
-  git rebase --onto ${BASE_REF} ${HEAD_REF} pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  git rebase --onto ${BASE_REF} ${HEAD_REF}
   echo "push"
   git push -f origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
 

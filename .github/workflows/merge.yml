@@ -178,7 +178,8 @@ jobs:
         run: |
           set +e
           set -x
-          result=$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF} | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
+          target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
+          result=$(git branch -a --format="%(refname:short)" | grep -E ^origin/pr/${BASE_REF}/.*_${target}$ | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
           tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
           echo "::set-output name=branches::$tmp"
         env:

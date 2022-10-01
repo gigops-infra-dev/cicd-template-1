@@ -37,4 +37,3 @@ inputs = {
     Environment = "8"
   }
 }
-

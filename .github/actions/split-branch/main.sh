@@ -36,8 +36,10 @@ main(){
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
     git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   fi
+  git stash
+  git rebase --onto origin/staging ${HEAD_REF} pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
   echo "push"
-  git push origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
+  git push -f origin pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
 
   if [ $? == 0 ]; then
     echo "success"

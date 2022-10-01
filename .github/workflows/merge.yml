@@ -214,10 +214,13 @@ jobs:
           git fetch --all
       - if: ${{ matrix.branch != github.head_ref }}
         run: | 
+          set -x
+          target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
           git merge -Xtheirs origin/${BASE_REF}
+          git add --all
+          git reset HEAD^ ./${TERRAFORM_BASE_DIR}/${target}
           git push origin HEAD
 
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ matrix.branch }}
-          REF_THIS_PR: ${{ github.head_ref }}

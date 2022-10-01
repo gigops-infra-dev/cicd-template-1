@@ -20,7 +20,7 @@ setOption() {
 
 checkout() {
   option=$1
-  if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR})" ]; then
+  if [ -n "$(git branch -a --format="%(refname:short)" | grep -x ^origin/pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR})" ]; then
     git checkout pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}
   else
     git checkout -b pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} origin/${BASE_REF}
@@ -30,8 +30,7 @@ checkout() {
 main(){
   option=`setOption`
   checkout "$option"
-  git merge -Xtheirs ${HEAD_REF}
-  git add --all
+  git checkout --theirs ${HEAD_REF} -- .
   git reset HEAD^ ./${TERRAFORM_BASE_DIR}
   if ! isTmp; then
     git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/

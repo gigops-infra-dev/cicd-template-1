@@ -34,6 +34,10 @@ inputs = {
 
   tags = {
     Terraform   = "true"
+<<<<<<< HEAD
     Environment = "17"
+=======
+    Environment = "31.1"
+>>>>>>> feature/test31
   }
 }

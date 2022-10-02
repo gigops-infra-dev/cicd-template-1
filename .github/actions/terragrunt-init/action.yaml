@@ -16,7 +16,6 @@ inputs:
     description: "Whether to write the result of init in markdown"
     default: true
     required: false
-    type: boolean
   tf_workspace:
     description: "TF WORKSPACE"
     required: true
@@ -54,7 +53,7 @@ runs:
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }}
         TF_WORKSPACE: ${{ inputs.TF_WORKSPACE }}
 
-    - if: ${{ inputs.is_write_pr }}
+    - if: ${{ inputs.is_write_pr == 'true' }}
       run: |
         if [ "${{ steps.init.outcome }}" == "success" ]; then
           echo "# :heavy_check_mark:Terragrunt Init" > INIT.md
@@ -97,7 +96,7 @@ runs:
         PR_NUMBER: ${{ github.event.pull_request.number }}
         INIT_URL: ${{ inputs.init_url }}
 
-    - if: ${{ steps.init.outcome == 'failure' }} 
+    - if: ${{ steps.init.outcome == 'failure' && inputs.is_write_pr == 'true'  }} 
       run: |
         if [ -n "$PLAN_URL" ]; then
           gh api --method DELETE -H "Accept: application/vnd.github+json" ${PLAN_URL}

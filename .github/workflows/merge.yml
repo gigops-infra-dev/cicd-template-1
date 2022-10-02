@@ -224,7 +224,7 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ matrix.branch }}
-      - if: ${{ steps.needs.outcome == "failure" }}
+      - if: ${{ steps.merge.outcome == "failure" }}
         run: |
           set -x
           if [ ! -n "$(gh pr list --base ${HEAD_REF} --head ${BASE_REF})" ]; then

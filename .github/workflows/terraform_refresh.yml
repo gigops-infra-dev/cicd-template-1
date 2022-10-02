@@ -22,7 +22,7 @@ on:
         type: choice
         options:
         - terraform
-        
+
 permissions: write-all
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,3 +67,4 @@ jobs:
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
           working_directory: ./${{ inputs.terraform_base_dir }}/${{ steps.setup-envs.outputs.ghaction_target }}
           refresh: true
+          base_ref: ${{ inputs.branch }}

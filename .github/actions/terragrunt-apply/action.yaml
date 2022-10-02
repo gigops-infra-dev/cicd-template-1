@@ -101,7 +101,8 @@ runs:
         BASE_REF: ${{ inputs.base_ref }}
         HEAD_REF: ${{ inputs.base_ref }}
 
-    - if: ${{ inputs.refresh == 'true' }}
+    - id: refresh
+      if: ${{ inputs.refresh == 'true' }}
       run:  ./deploy-terragrunt.sh 'apply -refresh-only' "${TARGET_DIR}" 
       working-directory: ${{ inputs.working_directory }}
       shell: bash
@@ -110,3 +111,47 @@ runs:
         TARGET_DIR: ${{ inputs.target_dir }}
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }} 
         TF_WORKSPACE: ${{ inputs.tf_workspace }}
+
+    - id: output
+      if: ${{ steps.apply.outcome == 'success'  || steps.refresh.outcome == 'success' }}
+      run: |
+        set -x
+        mkdir _output
+        ls ./terraform/sample/hcl | while read line; do
+          terragrunt output --terragrunt-working-dir ./${WORKING_DIR}/hcl/${line} >> _output/${line}
+        done
+      shell: bash
+      env:
+        WORKING_DIR: ${{ inputs.working_directory }}
+        AWS_PROFILE: ${{ inputs.aws_profile }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }} 
+        TF_WORKSPACE: ${{ inputs.tf_workspace }}
+
+
+    - if: ${{ steps.output.outcome == 'success' }}
+      run: |
+        echo "# ${WORKING_DIR} Parameters" > OUTPUT.md
+        ls _output | while read line; do
+          echo "<details>" >> OUTPUT.md
+          echo "<summary>${line}</summary>" >> OUTPUT.md
+          echo -e "\n" >> OUTPUT.md
+          echo '```hcl' >> OUTPUT.md
+          cat _output/${line} >> OUTPUT.md
+          echo '```' >> OUTPUT.md
+          echo "</details>" >> OUTPUT.md
+        done
+
+        issue=$(gh issue list --json title,url | jq '.[] | select(.title == "[${BASE_REF}]${WORKING_DIR} Parameters")')
+        if [ -n "$(issue)" ]; then
+          url=$(echo "${issue}" | jq -r .url)
+          gh issue edit ${url} -F OUTPUT.md
+        else
+          gh issue create --title "[${BASE_REF}]${WORKING_DIR} Parameters" -F ./OUTPUT.md --label "documentation" 
+        fi
+      shell: bash
+      WORKING_DIR: ${{ inputs.working_directory }}
+      BASE_REF: ${{ inputs.base_ref }}
+
+
+
+

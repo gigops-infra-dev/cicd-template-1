@@ -118,11 +118,11 @@ runs:
         set -x
         mkdir _output
         ls ./terraform/sample/hcl | while read line; do
-          terragrunt output --terragrunt-working-dir ./${WORKING_DIR}/hcl/${line} >> _output/${line}
+          terragrunt output --terragrunt-working-dir ./hcl/${line} >> _output/${line}
         done
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
-        WORKING_DIR: ${{ inputs.working_directory }}
         AWS_PROFILE: ${{ inputs.aws_profile }}
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }} 
         TF_WORKSPACE: ${{ inputs.tf_workspace }}
@@ -149,6 +149,7 @@ runs:
           gh issue create --title "[${BASE_REF}]${WORKING_DIR} Parameters" -F ./OUTPUT.md --label "documentation" 
         fi
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       env:
         WORKING_DIR: ${{ inputs.working_directory }}
         BASE_REF: ${{ inputs.base_ref }}

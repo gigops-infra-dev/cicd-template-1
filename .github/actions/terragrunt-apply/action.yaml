@@ -103,7 +103,7 @@ runs:
 
     - id: refresh
       if: ${{ inputs.refresh == 'true' }}
-      run:  ./deploy-terragrunt.sh 'apply -refresh-only' "${TARGET_DIR}" 
+      run:  ./deploy-terragrunt.sh 'apply -refresh-only' "${TARGET_DIR}" &>/dev/null
       working-directory: ${{ inputs.working_directory }}
       shell: bash
       env:

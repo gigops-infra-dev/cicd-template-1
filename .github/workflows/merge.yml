@@ -223,6 +223,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ matrix.branch }}
       - if: ${{ steps.needs.outcome == "failure" }}
+        run:
           set -x
           if [ ! -n "$(gh pr list --base ${HEAD_REF} --head ${BASE_REF})" ]; then
             gh pr create --base ${HEAD_REF} \

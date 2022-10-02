@@ -141,12 +141,12 @@ runs:
           echo "</details>" >> OUTPUT.md
         done
 
-        issue=$(gh issue list --json title,url | jq '.[] | select(.title == "(${BASE_REF})${WORKING_DIR} Parameters")')
+        issue=$(gh issue list --json title,url | jq '.[] | select(.title == "[${BASE_REF}]${WORKING_DIR#./terraform} Parameters")')
         if [ -n "$(issue)" ]; then
           url=$(echo "${issue}" | jq -r .url)
           gh issue edit ${url} -F OUTPUT.md
         else
-          gh issue create --title "(${BASE_REF})${WORKING_DIR} Parameters" -F ./OUTPUT.md --label "documentation" 
+          gh issue create --title "[${BASE_REF}]${WORKING_DIR#./terraform/} Parameters" -F ./OUTPUT.md --label "documentation" 
         fi
       shell: bash
       working-directory: ${{ inputs.working_directory }}

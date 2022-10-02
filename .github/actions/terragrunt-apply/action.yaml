@@ -117,7 +117,7 @@ runs:
       run: |
         set -x
         mkdir _output
-        ls ./terraform/sample/hcl | while read line; do
+        ls ./hcl | while read line; do
           terragrunt output --terragrunt-working-dir ./hcl/${line} >> _output/${line}
         done
       shell: bash

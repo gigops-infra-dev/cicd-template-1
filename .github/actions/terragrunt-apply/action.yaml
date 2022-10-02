@@ -149,9 +149,6 @@ runs:
           gh issue create --title "[${BASE_REF}]${WORKING_DIR} Parameters" -F ./OUTPUT.md --label "documentation" 
         fi
       shell: bash
-      WORKING_DIR: ${{ inputs.working_directory }}
-      BASE_REF: ${{ inputs.base_ref }}
-
-
-
-
+      env:
+        WORKING_DIR: ${{ inputs.working_directory }}
+        BASE_REF: ${{ inputs.base_ref }}

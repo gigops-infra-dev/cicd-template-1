@@ -175,7 +175,7 @@ jobs:
   reverse_merge:
     needs: synchronize
     runs-on: ubuntu-latest
-    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' && matrix.branch != github.head_ref}}
+    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' }}
     strategy:
       fail-fast: false 
       matrix:

@@ -167,7 +167,7 @@ jobs:
         with:
           fetch-depth: 0
       - id: list_branches
-        run: ./.github/action/list-child-branches
+        uses: ./.github/action/list-child-branches
         with:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}

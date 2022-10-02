@@ -133,12 +133,12 @@ runs:
       run: |
         set -x 
         echo "# ${GHACTION_TARGET} Parameters" > OUTPUT.md
-        ls .${OUTPUT_DIR} | while read line; do
+        ls ./${OUTPUT_DIR} | while read line; do
           echo "<details>" >> OUTPUT.md
           echo "<summary>${line}</summary>" >> OUTPUT.md
           echo -e "\n" >> OUTPUT.md
           echo '```hcl' >> OUTPUT.md
-          cat .${OUTPUT_DIR}/${line} | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"  >> OUTPUT.md
+          cat ./${OUTPUT_DIR}/${line} | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"  >> OUTPUT.md
           echo '```' >> OUTPUT.md
           echo "</details>" >> OUTPUT.md
         done

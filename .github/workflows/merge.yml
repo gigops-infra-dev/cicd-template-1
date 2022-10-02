@@ -7,7 +7,8 @@ on:
       - staging
     types: [closed]
 
-concurrency: ${{ github.base_ref }}
+concurrency: 
+  group: ${{ github.head_ref }}
 
 permissions: write-all
 env:
@@ -154,7 +155,7 @@ jobs:
       - id: check_branch_exists
         continue-on-error: true
         run: |
-          if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/${HEAD_REF})" ]; then
+          if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/${HEAD_REF}$)" ]; then
             exit 0
           else
             exit 1
@@ -176,7 +177,6 @@ jobs:
       - run: git fetch --all
       - id: check_child_branches
         run: |
-          set +e
           set -x
           target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
           result=$(git branch -a --format="%(refname:short)" | grep -E ^origin/pr/${BASE_REF}/.*_${target}$ | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
@@ -213,7 +213,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch --all
-      - if: ${{ matrix.branch != github.head_ref }}
+      - id: merge
+        if: ${{ matrix.branch != github.head_ref }}
         run: | 
           set -x
           git merge origin/${BASE_REF}
@@ -221,3 +222,15 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ matrix.branch }}
+      - if: ${{ steps.needs.outcome == "failure" }}
+          set -x
+          if [ ! -n "$(gh pr list --base ${HEAD_REF} --head ${BASE_REF})" ]; then
+            gh pr create --base ${HEAD_REF} \
+            --head ${BASE_REF} \
+            --title "Please resolve conflicts ${HEAD_REF}" \
+            --body ""
+          fi
+        env:
+          GITHUB_TOKEN: ${{ inputs.github_action_token }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ matrix.branch }}       

@@ -65,6 +65,7 @@ jobs:
           target_dir: all
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          working_directory: ./${{ inputs.terraform_base_dir }}/${{ steps.setup-envs.outputs.ghaction_target }}
+          terraform_base_dir: ${{ inputs.terraform_base_dir }}
+          ghaction_target: ${{ steps.setup-envs.outputs.ghaction_target }}
           refresh: true
           base_ref: ${{ inputs.branch }}

@@ -81,8 +81,10 @@ jobs:
           target_dir: ${{ needs.check-targets.outputs.target_dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
+          terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
+          ghaction_target: ${{ steps.setup-envs.outputs.ghaction_target  }}
           apply_url: ${{ needs.check-targets.outputs.apply_url }}
+          base_ref: ${{ github.base_ref }}
         
   create-pr:
     runs-on: ubuntu-latest

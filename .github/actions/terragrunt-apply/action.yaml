@@ -130,6 +130,7 @@ runs:
 
     - if: ${{ steps.output.outcome == 'success' }}
       run: |
+        set -x 
         echo "# ${WORKING_DIR#./terraform/} Parameters" > OUTPUT.md
         ls _output | while read line; do
           echo "<details>" >> OUTPUT.md

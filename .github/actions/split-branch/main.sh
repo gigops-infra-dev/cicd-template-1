@@ -36,7 +36,7 @@ main(){
   done
   git add --all
   git commit -m "Split commit ${HEAD_REF} to pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
-  git push origin HEAD
+  git push -f origin HEAD
 
   if [ $? == 0 ]; then
     echo "success"

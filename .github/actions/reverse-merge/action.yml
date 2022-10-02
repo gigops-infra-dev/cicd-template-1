@@ -1,0 +1,43 @@
+name: List child branches
+description: List child branches
+inputs:
+  base_ref:
+    required: true
+  head_ref:
+    required: true
+  github_action_token:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: | 
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git fetch --all
+      shell: bash
+
+    - id: merge
+      run: | 
+        set -x
+        git merge origin/${BASE_REF}
+        git push origin HEAD
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+        HEAD_REF: ${{ inputs.head_ref }}
+
+    - if: ${{ steps.merge.outcome == 'failure' }}
+      run: |
+        set -x
+        if [ ! -n "$(gh pr list --base ${HEAD_REF} --head ${BASE_REF})" ]; then
+          gh pr create --base ${HEAD_REF} \
+          --head ${BASE_REF} \
+          --title "Please resolve conflicts ${HEAD_REF}" \
+          --body ""
+        fi
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_action_token }}
+        BASE_REF: ${{ inputs.base_ref }}
+        HEAD_REF: ${{ inputs.head_ref }}  

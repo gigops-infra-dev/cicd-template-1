@@ -142,7 +142,7 @@ runs:
           echo "</details>" >> OUTPUT.md
         done
 
-        issue=$(gh issue list --json title,url | jq '.[] | select(.title == "[${BASE_REF}]${WORKING_DIR#./terraform/} Parameters")')
+        issue=$(gh issue list --json title,url | jq ".[] | select(.title == \"[${BASE_REF}]${WORKING_DIR#./terraform/} Parameters\")")
         if [ -n "${issue}" ]; then
           url=$(echo "${issue}" | jq -r .url)
           gh issue edit ${url} -F OUTPUT.md

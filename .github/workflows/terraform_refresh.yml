@@ -7,7 +7,7 @@ on:
         description: 'Target branch name'
         required: true
         default: staging
-        type: choise
+        type: choice
         options:
         - main
         - staging
@@ -19,7 +19,7 @@ on:
         description: 'Directory with terraform'
         required: true
         default: terraform
-        type: choise
+        type: choice
         options:
         - terraform
 

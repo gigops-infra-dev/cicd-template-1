@@ -132,7 +132,7 @@ runs:
     - if: ${{ steps.output.outcome == 'success' }}
       run: |
         set -x 
-        echo "# ${GHACTION_TARGET} Parameters" > OUTPUT.md
+        echo "# ${GHACTION_TARGET} parameters" > OUTPUT.md
         ls ./${OUTPUT_DIR} | while read line; do
           echo "<details>" >> OUTPUT.md
           echo "<summary>${line}</summary>" >> OUTPUT.md
@@ -143,7 +143,7 @@ runs:
           echo "</details>" >> OUTPUT.md
         done
 
-        issue=$(gh issue list --json title,url | jq ".[] | select(.title == \"[${BASE_REF}]${GHACTION_TARGET} Parameters\")")
+        issue=$(gh issue list --json title,url | jq ".[] | select(.title == \"[${BASE_REF}]${GHACTION_TARGET} parameters\")")
         if [ -n "${issue}" ]; then
           url=$(echo "${issue}" | jq -r .url)
           gh issue edit ${url} -F OUTPUT.md

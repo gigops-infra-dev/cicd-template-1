@@ -136,17 +136,17 @@ runs:
           echo "<summary>${line}</summary>" >> OUTPUT.md
           echo -e "\n" >> OUTPUT.md
           echo '```hcl' >> OUTPUT.md
-          cat _output/${line} >> OUTPUT.md
+          cat _output/${line} | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"  >> OUTPUT.md
           echo '```' >> OUTPUT.md
           echo "</details>" >> OUTPUT.md
         done
 
-        issue=$(gh issue list --json title,url | jq '.[] | select(.title == "[${BASE_REF}]${WORKING_DIR} Parameters")')
+        issue=$(gh issue list --json title,url | jq '.[] | select(.title == "(${BASE_REF})${WORKING_DIR} Parameters")')
         if [ -n "$(issue)" ]; then
           url=$(echo "${issue}" | jq -r .url)
           gh issue edit ${url} -F OUTPUT.md
         else
-          gh issue create --title "[${BASE_REF}]${WORKING_DIR} Parameters" -F ./OUTPUT.md --label "documentation" 
+          gh issue create --title "(${BASE_REF})${WORKING_DIR} Parameters" -F ./OUTPUT.md --label "documentation" 
         fi
       shell: bash
       working-directory: ${{ inputs.working_directory }}

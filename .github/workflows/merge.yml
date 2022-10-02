@@ -153,87 +153,47 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: git fetch --all
-      - id: check_branch_exists
-        continue-on-error: true
-        run: |
-          if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/${HEAD_REF}$)" ]; then
-            exit 0
-          else
-            exit 1
-          fi
-        env:
-          HEAD_REF: ${{ github.head_red }}
-      - if: ${{ steps.check_branch_exists.outcome == 'success' }}
-        run: git push origin --delete ${{ github.head_ref }}
+      - uses: ./.github/actions/clean-branch
+        with:
+          head_ref: ${{ github.head_ref }}
 
   synchronize:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged
     outputs:
-      branches: ${{ steps.check_child_branches.outputs.branches }}
+      branches: ${{ steps.list_branches.outputs.branches }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: git fetch --all
-      - id: check_child_branches
-        run: |
-          set -x
-          target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
-          result=$(git branch -a --format="%(refname:short)" | grep -E ^origin/pr/${BASE_REF}/.*_${target}$ | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
-          tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
-          echo "::set-output name=branches::$tmp"
-        env:
+      - id: list_branches
+        run: ./.github/action/list-child-branches
+        with:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}
 
   reverse_merge:
     needs: synchronize
     runs-on: ubuntu-latest
-    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' }}
+    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' && matrix.branch != github.head_ref}}
     strategy:
       fail-fast: false 
       matrix:
         branch: ${{ fromJson(needs.synchronize.outputs.branches) }}
     steps:
-      - if: ${{ matrix.branch != github.head_ref }}
-        id: generate_token
+      - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
           private_key: ${{ secrets.private_key }}
-      - if: ${{ matrix.branch != github.head_ref }}
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ matrix.branch }}
           token: ${{ steps.generate_token.outputs.token }}
-      - if: ${{ matrix.branch != github.head_ref }}
-        run: | 
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git fetch --all
-      - id: merge
-        if: ${{ matrix.branch != github.head_ref }}
-        run: | 
-          set -x
-          git merge origin/${BASE_REF}
-          git push origin HEAD
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ matrix.branch }}
-      - if: ${{ steps.merge.outcome == 'failure' }}
-        run: |
-          set -x
-          if [ ! -n "$(gh pr list --base ${HEAD_REF} --head ${BASE_REF})" ]; then
-            gh pr create --base ${HEAD_REF} \
-            --head ${BASE_REF} \
-            --title "Please resolve conflicts ${HEAD_REF}" \
-            --body ""
-          fi
-        env:
-          GITHUB_TOKEN: ${{ inputs.github_action_token }}
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ matrix.branch }}       
+      - uses: ./.github/action/reverse-merge
+        with:
+          base_ref: ${{ github.base_ref }}
+          head_ref: ${{ matrix.branch }}       
+          github_action_token: ${{ steps.generate_token.outputs.token }}     

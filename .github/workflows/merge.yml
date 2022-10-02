@@ -167,7 +167,7 @@ jobs:
         with:
           fetch-depth: 0
       - id: list_branches
-        uses: ./.github/action/list-child-branches
+        uses: ./.github/actions/list-child-branches
         with:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}
@@ -195,7 +195,7 @@ jobs:
           ref: ${{ matrix.branch }}
           token: ${{ steps.generate_token.outputs.token }}
       - if: matrix.branch != github.head_ref
-        uses: ./.github/action/reverse-merge
+        uses: ./.github/actions/reverse-merge
         with:
           base_ref: ${{ github.base_ref }}
           head_ref: ${{ matrix.branch }}       

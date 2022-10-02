@@ -22,7 +22,10 @@ on:
         type: choice
         options:
         - terraform
+        
 permissions: write-all
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   refresh:
     runs-on: ubuntu-latest

@@ -167,7 +167,7 @@ jobs:
         with:
           fetch-depth: 0
       - id: list_branches
-        run: ./.github/action/list-child-branches
+        uses: ./.github/actions/list-child-branches
         with:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}
@@ -175,24 +175,27 @@ jobs:
   reverse_merge:
     needs: synchronize
     runs-on: ubuntu-latest
-    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' && matrix.branch != github.head_ref}}
+    if: ${{ needs.synchronize.outputs.branches != '[]' && needs.synchronize.outputs.branches != '' }}
     strategy:
       fail-fast: false 
       matrix:
         branch: ${{ fromJson(needs.synchronize.outputs.branches) }}
     steps:
-      - id: generate_token
+      - if: matrix.branch != github.head_ref
+        id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
           private_key: ${{ secrets.private_key }}
-      - uses: actions/checkout@v3
+      - if: matrix.branch != github.head_ref
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ matrix.branch }}
           token: ${{ steps.generate_token.outputs.token }}
-      - uses: ./.github/action/reverse-merge
+      - if: matrix.branch != github.head_ref
+        uses: ./.github/actions/reverse-merge
         with:
           base_ref: ${{ github.base_ref }}
           head_ref: ${{ matrix.branch }}       

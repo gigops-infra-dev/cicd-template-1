@@ -34,24 +34,8 @@ main(){
   echo "${ls}" | while read line; do 
     git restore -s HEAD ${TERRAFORM_BASE_DIR}/${line}/
   done
-  # if ! isTmp; then
-  #   git add ./${TERRAFORM_BASE_DIR}/${TARGET_DIR}/
-  #   diff=$(git diff pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} ${HEAD_REF} --name-only --diff-filter=D | grep ${TERRAFORM_BASE_DIR}/${TARGET_DIR}/)
-  #   if [ -n "${diff}" ]; then
-  #     echo "${diff}" | while read line; do
-  #       git rm $line
-  #     done
-  #   fi
-  #   diff=$(git diff pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR} ${HEAD_REF} --name-only --diff-filter=D | grep -v ${TERRAFORM_BASE_DIR}/)
-  #   if [ -n "${diff}" ]; then
-  #     echo "${diff}" | while read line; do
-  #       git rm $line
-  #     done
-  #   fi
-  #   git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
-  # fi
   git add --all
-  git commit -m "Merge pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
+  git commit -m "Split commit ${HEAD_REF} to pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   git push origin HEAD
 
   if [ $? == 0 ]; then

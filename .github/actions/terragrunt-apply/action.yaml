@@ -117,7 +117,9 @@ runs:
         set -x
         mkdir ${OUTPUT_DIR}
         ls .${SUB_DIR} | while read line; do
-          terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} >> ./${OUTPUT_DIR}/${line}
+          if [ -f .${SUB_DIR}/${line}/terragrunt.hcl ]; then
+            terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} >> ./${OUTPUT_DIR}/${line}
+          fi
         done
       shell: bash
       working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
@@ -132,7 +134,7 @@ runs:
     - if: ${{ steps.output.outcome == 'success' }}
       run: |
         set -x 
-        echo "# ${GHACTION_TARGET} Parameters" > OUTPUT.md
+        echo "# ${GHACTION_TARGET} parameters" > OUTPUT.md
         ls ./${OUTPUT_DIR} | while read line; do
           echo "<details>" >> OUTPUT.md
           echo "<summary>${line}</summary>" >> OUTPUT.md
@@ -143,12 +145,12 @@ runs:
           echo "</details>" >> OUTPUT.md
         done
 
-        issue=$(gh issue list --json title,url | jq ".[] | select(.title == \"[${BASE_REF}]${GHACTION_TARGET} Parameters\")")
+        issue=$(gh issue list --json title,url | jq ".[] | select(.title == \"[${BASE_REF}]${GHACTION_TARGET} parameters\")")
         if [ -n "${issue}" ]; then
           url=$(echo "${issue}" | jq -r .url)
           gh issue edit ${url} -F OUTPUT.md
         else
-          gh issue create --title "[${BASE_REF}]${GHACTION_TARGET} Parameters" -F ./OUTPUT.md --label "documentation" 
+          gh issue create --title "[${BASE_REF}]${GHACTION_TARGET} parameters" -F ./OUTPUT.md --label "documentation" 
         fi
       shell: bash
       working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}

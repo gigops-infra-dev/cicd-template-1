@@ -13,15 +13,17 @@ TARGET_DIR=(${TARGET_DIR})
 
 if [ "$TARGET_DIR" != "all" ]; then
   for i in "${TARGET_DIR[@]}"; do
-    INCLUDE_DIR="${INCLUDE_DIR} --terragrunt-include-dir ./hcl/${i}"
+    INCLUDE_DIR="${INCLUDE_DIR} --terragrunt-include-dir ./hcl/${i} --terragrunt-non-interactive"
   done 
-
-  if [ "$COMMAND" == "destroy" ]; then
-    STRICT_INCLUDE="--terragrunt-strict-include"
-  fi
+else
+  INCLUDE_DIR="--terragrunt-non-interactive"
 fi
 
-command="terragrunt run-all ${COMMAND} ${INCLUDE_DIR} -no-color terragrunt-working-dir=hcl ${STRICT_INCLUDE}  --terragrunt-non-interactive" #--terragrunt-non-interactive  --terragrunt-source-update
+if [ "$COMMAND" == "destroy" ]; then
+  STRICT_INCLUDE="--terragrunt-strict-include"
+fi
+
+command="terragrunt run-all ${COMMAND} ${INCLUDE_DIR} -no-color terragrunt-working-dir=hcl ${STRICT_INCLUDE}  --terragrunt-source-update " #--terragrunt-non-interactive  
 
 echo "--------"
 echo "COMMAND: ${command}"

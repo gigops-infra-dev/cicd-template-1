@@ -117,7 +117,9 @@ runs:
         set -x
         mkdir ${OUTPUT_DIR}
         ls .${SUB_DIR} | while read line; do
-          terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} >> ./${OUTPUT_DIR}/${line}
+          if [ -f .${SUB_DIR}/${line}/terragrunt.hcl ]; then
+            terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} >> ./${OUTPUT_DIR}/${line}
+          fi
         done
       shell: bash
       working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}

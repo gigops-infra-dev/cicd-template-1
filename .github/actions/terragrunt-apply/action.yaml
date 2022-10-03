@@ -148,7 +148,7 @@ runs:
           url=$(echo "${issue}" | jq -r .url)
           gh issue edit ${url} -F OUTPUT.md
         else
-          gh issue create --title "[${BASE_REF}]${GHACTION_TARGET} Parameters" -F ./OUTPUT.md --label "documentation" 
+          gh issue create --title "[${BASE_REF}]${GHACTION_TARGET} parameters" -F ./OUTPUT.md --label "documentation" 
         fi
       shell: bash
       working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}

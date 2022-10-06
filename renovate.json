@@ -2,6 +2,5 @@
   "labels": ["dependencies"],
   "baseBranches": ["staging"],
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
-  "prCreation": "not-pending"
+  "extends": ["config:base"]
 }

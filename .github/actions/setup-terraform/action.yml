@@ -8,7 +8,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: rhythmictech/actions-setup-tfenv@v0.0.2
+    - uses: rhythmictech/actions-setup-tfenv@v0.1.2
     - name: setup tgenv
       run: |
         git clone https://github.com/cunymatthieu/tgenv.git ~/.tgenv

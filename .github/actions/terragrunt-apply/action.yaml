@@ -118,7 +118,7 @@ runs:
         mkdir ${OUTPUT_DIR}
         ls .${SUB_DIR} | while read line; do
           if [ -f .${SUB_DIR}/${line}/terragrunt.hcl ]; then
-            terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} >> ./${OUTPUT_DIR}/${line}
+            terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} > ./${OUTPUT_DIR}/${line}
           fi
         done
       shell: bash

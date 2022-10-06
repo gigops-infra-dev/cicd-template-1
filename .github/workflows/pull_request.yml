@@ -89,7 +89,7 @@ jobs:
   auto-merge:
     runs-on: ubuntu-latest
     needs: [get-changes,plan]
-    if: ${{ (needs.get-changes.outputs.dir == '' || needs.plan.outcome = 'success' ) && github.base_ref != 'main' }}
+    if: ${{ (needs.get-changes.outputs.dir == '' || needs.plan.outcome == 'success' ) && github.base_ref != 'main' }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1

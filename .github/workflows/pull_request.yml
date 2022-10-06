@@ -88,8 +88,26 @@ jobs:
 
   auto-merge:
     runs-on: ubuntu-latest
-    needs: [get-changes, plan]
-    if: ${{ always() && (needs.get-changes.outputs.dir == '' || needs.plan.outcome == 'success') && github.base_ref != 'main' }}
+    needs: [get-changes,plan]
+    if: ${{ needs.get-changes.outputs.dir == '' && github.base_ref != 'main' }}
+    steps:
+      - id: generate_token
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        with:
+          app_id: ${{ secrets.app_id }}
+          installation_id: ${{ secrets.installation_id }}
+          private_key: ${{ secrets.private_key }}
+
+      - uses: actions/checkout@v3
+      - run: gh pr merge ${PR_NUMBER} --merge
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+
+  auto-merge2:
+    runs-on: ubuntu-latest
+    needs: plan
+    if: ${{ success() && github.base_ref != 'main' }}
     steps:
       - id: generate_token
         uses: ezqy/ghaction/generate-github-app-token@v0.0.1

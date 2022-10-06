@@ -88,7 +88,7 @@ jobs:
 
   auto-merge:
     runs-on: ubuntu-latest
-    needs: [get-changes,plan]
+    needs: get-changes
     if: ${{ needs.get-changes.outputs.dir == '' && github.base_ref != 'main' }}
     steps:
       - id: generate_token

@@ -1,0 +1,29 @@
+name: Clean branch
+description: Clean branch
+inputs:
+  head_ref:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: git fetch --all
+      shell: bash
+      
+    - id: check_branch_exists
+      continue-on-error: true
+      run: |
+        if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/${HEAD_REF}$)" ]; then
+          exit 0
+        else
+          exit 1
+        fi
+      shell: bash
+      env:
+        HEAD_REF: ${{ inputs.head_ref }}
+
+    - if: ${{ steps.check_branch_exists.outcome == 'success' }}
+      run: git push origin --delete ${HEAD_REF}
+      shell: bash
+      env:
+        HEAD_REF: ${{ inputs.head_ref }}

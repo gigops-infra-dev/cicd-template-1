@@ -1,0 +1,28 @@
+name: List child branches
+description: List child branches
+inputs:
+  base_ref:
+    required: true
+  head_ref:
+    required: true
+outputs:
+  branches:
+    value: ${{ steps.list_child_branches.outputs.branches }}
+
+runs:
+  using: "composite"
+  steps:
+    - run: git fetch --all
+      shell: bash
+    - id: list_child_branches
+      run: |
+        set -x
+        set +e
+        target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
+        result=$(git branch -a --format="%(refname:short)" | grep -E ^origin/pr/${BASE_REF}/.*_${target}$ | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
+        tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
+        echo "::set-output name=branches::$tmp"
+      shell: bash
+      env:
+        BASE_REF: ${{ github.base_ref }}
+        HEAD_REF: ${{ github.head_ref }}

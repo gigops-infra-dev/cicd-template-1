@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'feature/**'
+      - 'renovate/**'
 
 permissions: write-all
 env:

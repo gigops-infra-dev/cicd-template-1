@@ -2,4 +2,3 @@
 .terragrunt-cache
 terraform.tfstate
 node_modules/
-.terraform.lock.hcl

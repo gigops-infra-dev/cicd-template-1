@@ -31,9 +31,11 @@ main(){
   checkout "$option"
   ls=$(ls ${TERRAFORM_BASE_DIR} | grep -v -E ^${TARGET_DIR}$ )
   git checkout --no-overlay --theirs ${HEAD_REF} .
-  echo "${ls}" | while read line; do 
-    git restore -s HEAD ${TERRAFORM_BASE_DIR}/${line}/
-  done
+  if [ -n "${ls}"]; then
+    echo "${ls}" | while read line; do 
+      git restore -s HEAD ${TERRAFORM_BASE_DIR}/${line}/
+    done
+  fi
   git add --all
   git commit -m "Split commit ${HEAD_REF} to pr/${BASE_REF}/${HEAD_REF#feature/}_${TARGET_DIR}"
   git push -f origin HEAD

@@ -31,15 +31,7 @@ runs:
       run: |
         set -x
         set +e
-        if [ "${TYPE}" == "synchronize" ]; then
-          diff=$(git diff HEAD^ --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET} | grep -i -v ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl)
-          if [ -n "${diff}" ]; then
-            dir='all'
-          else
-            dir=$(git diff HEAD^ --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl | cut -d '/' -f 4 | uniq | tr '\n' ' ')
-          fi
-          echo "::set-output name=dir::$dir"        
-        else
+        if [ -n "${GHACTION_TARGET}" ]; then
           diff=$(git diff origin/${BASE_REF} --name-only --diff-filter=d | grep -i ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET} | grep -i -v ^${TERRAFORM_BASE_DIR}/${GHACTION_TARGET}/hcl)
           if [ -n "${diff}" ]; then
             dir='all'

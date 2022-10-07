@@ -9,8 +9,11 @@ inputs:
   git_ssh_command:
     description: "GIT SSH COMMAND"
     required: true
-  working_directory:
-    description: 'WORKING DIRECTORY'
+  terraform_base_dir:
+    description: 'TERRAFORM_BASE_DIR'
+    required: true
+  ghaction_target:
+    description: 'GHACTION_TARGET'
     required: true
   tf_workspace:
     description: "TF WORKSPACE"
@@ -19,8 +22,6 @@ inputs:
     description: "Pull request url"
     required: false
   base_ref:
-    required: true
-  head_ref:
     required: true
   refresh:
     required: false
@@ -33,7 +34,7 @@ runs:
       if: ${{ inputs.refresh == 'false' }}
       run:  ./deploy-terragrunt.sh apply "${TARGET_DIR}" 1> stdout.log 2> stderr.log
       continue-on-error: true
-      working-directory: ${{ inputs.working_directory }}
+      working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
@@ -82,7 +83,7 @@ runs:
           gh pr comment ${PR_NUMBER} -F ./APPLY.md
         fi
 
-      working-directory: ${{ inputs.working_directory }}
+      working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
@@ -94,19 +95,66 @@ runs:
         result=$(gh issue create --title "Error terragrunt apply" -F ./APPLY.md --label "bug" )
         issue_num=$(echo $result | awk -F "/" '{ print $NF }')
         exit 1
-      working-directory: ${{ inputs.working_directory }}
+      working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
       shell: bash
       env:
         PR_NUMBER: ${{ github.event.pull_request.number }}
-        BASE_REF: ${{ inputs.base_ref }}
-        HEAD_REF: ${{ inputs.base_ref }}
 
-    - if: ${{ inputs.refresh == 'true' }}
-      run:  ./deploy-terragrunt.sh 'apply -refresh-only' "${TARGET_DIR}" 
-      working-directory: ${{ inputs.working_directory }}
+    - id: refresh
+      if: ${{ inputs.refresh == 'true' }}
+      run:  ./deploy-terragrunt.sh 'apply -refresh-only' "${TARGET_DIR}" &>/dev/null
+      working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
       shell: bash
       env:
         AWS_PROFILE: ${{ inputs.aws_profile }}
         TARGET_DIR: ${{ inputs.target_dir }}
         GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }} 
         TF_WORKSPACE: ${{ inputs.tf_workspace }}
+
+    - id: output
+      if: ${{ steps.apply.outcome == 'success'  || steps.refresh.outcome == 'success' }}
+      run: |
+        set -x
+        mkdir ${OUTPUT_DIR}
+        ls .${SUB_DIR} | while read line; do
+          if [ -f .${SUB_DIR}/${line}/terragrunt.hcl ]; then
+            terragrunt output --terragrunt-working-dir .${SUB_DIR}/${line} > ./${OUTPUT_DIR}/${line}
+          fi
+        done
+      shell: bash
+      working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
+      env:
+        AWS_PROFILE: ${{ inputs.aws_profile }}
+        GIT_SSH_COMMAND: ${{ inputs.git_ssh_command }} 
+        TF_WORKSPACE: ${{ inputs.tf_workspace }}
+        SUB_DIR: /hcl
+        OUTPUT_DIR: _output
+
+
+    - if: ${{ steps.output.outcome == 'success' }}
+      run: |
+        set -x 
+        echo "# ${GHACTION_TARGET} parameters" > OUTPUT.md
+        ls ./${OUTPUT_DIR} | while read line; do
+          echo "<details>" >> OUTPUT.md
+          echo "<summary>${line}</summary>" >> OUTPUT.md
+          echo -e "\n" >> OUTPUT.md
+          echo '```hcl' >> OUTPUT.md
+          cat ./${OUTPUT_DIR}/${line} | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"  >> OUTPUT.md
+          echo '```' >> OUTPUT.md
+          echo "</details>" >> OUTPUT.md
+        done
+
+        issue=$(gh issue list --json title,url | jq ".[] | select(.title == \"[${BASE_REF}]${GHACTION_TARGET} parameters\")")
+        if [ -n "${issue}" ]; then
+          url=$(echo "${issue}" | jq -r .url)
+          gh issue edit ${url} -F OUTPUT.md
+        else
+          gh issue create --title "[${BASE_REF}]${GHACTION_TARGET} parameters" -F ./OUTPUT.md --label "documentation" 
+        fi
+      shell: bash
+      working-directory: ./${{ inputs.terraform_base_dir }}/${{ inputs.ghaction_target }}
+      env:
+        GHACTION_TARGET: ${{ inputs.ghaction_target }}
+        BASE_REF: ${{ inputs.base_ref }}
+        OUTPUT_DIR: _output

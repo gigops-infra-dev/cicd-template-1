@@ -3,9 +3,9 @@
     {
       "ghaction_target": "sample",
       "main": {
-        "aws_profile": "default",
+        "aws_profile": "",
         "aws_role_arn": "",
-        "tf_workspace": "tc3-cicd-prod"
+        "tf_workspace": ""
       },
       "staging": {
         "aws_profile": "default",
@@ -16,9 +16,9 @@
     {
       "ghaction_target": "sample2",
       "main": {
-        "aws_profile": "default",
+        "aws_profile": "",
         "aws_role_arn": "",
-        "tf_workspace": "tc3-cicd-prod"
+        "tf_workspace": ""
       },
       "staging": {
         "aws_profile": "default",

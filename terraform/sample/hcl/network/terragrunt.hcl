@@ -1,5 +1,5 @@
 terraform {
-  source = "github.com/terraform-aws-modules/terraform-aws-vpc.git//.?ref=v3.16.0"
+  source = "github.com/terraform-aws-modules/terraform-aws-vpc.git//.?ref=v3.16.1"
 }
 include {
   path = find_in_parent_folders()

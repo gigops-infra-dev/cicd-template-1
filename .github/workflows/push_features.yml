@@ -33,7 +33,7 @@ jobs:
         dir: ${{ fromJson(needs.get-changes.outputs.dir) }}
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.2
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -57,7 +57,7 @@ jobs:
     if: ${{ needs.get-changes.outputs.dir == '[]' || needs.get-changes.outputs.dir == '' }}
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.2
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}

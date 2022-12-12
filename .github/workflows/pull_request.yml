@@ -92,7 +92,7 @@ jobs:
     if: ${{ needs.get-changes.outputs.dir == '' && github.base_ref != 'main' }}
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.2
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -110,7 +110,7 @@ jobs:
     if: ${{ success() && github.base_ref != 'main' }}
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.2
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -128,7 +128,7 @@ jobs:
     if: ${{ needs.get-changes.outputs.dir != '' && github.head_ref == 'staging' }}
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.2
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}

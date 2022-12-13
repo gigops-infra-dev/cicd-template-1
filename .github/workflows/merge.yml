@@ -36,7 +36,7 @@ jobs:
     needs: check-targets
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -95,7 +95,7 @@ jobs:
       HEAD_REF: staging
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -122,7 +122,7 @@ jobs:
       HEAD_REF: staging
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -183,7 +183,7 @@ jobs:
     steps:
       - if: matrix.branch != github.head_ref
         id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}

@@ -7,7 +7,8 @@ on:
       - staging
     types: [closed]
 
-concurrency: ${{ github.base_ref }}
+concurrency: 
+  group: ${{ github.head_ref }}
 
 permissions: write-all
 env:
@@ -35,7 +36,7 @@ jobs:
     needs: check-targets
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -43,7 +44,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{ steps.generate_token.outputs.token }}
-      - uses: docker/setup-buildx-action@v1
+      - uses: docker/setup-buildx-action@v2
       - id: setup-envs
         uses: ./.github/actions/setup-envs
         with:
@@ -80,8 +81,10 @@ jobs:
           target_dir: ${{ needs.check-targets.outputs.target_dir }}
           git_ssh_command: ssh -i /tmp/id_rsa -o UserKnownHostsFile=./known_hosts
           tf_workspace: ${{ steps.setup-envs.outputs.tf_workspace }}
-          working_directory: ./${{ env.TERRAFORM_BASE_DIR }}/${{ steps.setup-envs.outputs.ghaction_target }}
+          terraform_base_dir: ${{ env.TERRAFORM_BASE_DIR }}
+          ghaction_target: ${{ steps.setup-envs.outputs.ghaction_target  }}
           apply_url: ${{ needs.check-targets.outputs.apply_url }}
+          base_ref: ${{ github.base_ref }}
         
   create-pr:
     runs-on: ubuntu-latest
@@ -92,7 +95,7 @@ jobs:
       HEAD_REF: staging
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -119,7 +122,7 @@ jobs:
       HEAD_REF: staging
     steps:
       - id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
@@ -150,39 +153,22 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: git fetch --all
-      - id: check_branch_exists
-        continue-on-error: true
-        run: |
-          if [ -n "$(git branch -a --format="%(refname:short)" | grep -e ^origin/${HEAD_REF})" ]; then
-            exit 0
-          else
-            exit 1
-          fi
-        env:
-          HEAD_REF: ${{ github.head_red }}
-      - if: ${{ steps.check_branch_exists.outcome == 'success' }}
-        run: git push origin --delete ${{ github.head_ref }}
+      - uses: ./.github/actions/clean-branch
+        with:
+          head_ref: ${{ github.head_ref }}
 
   synchronize:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged
     outputs:
-      branches: ${{ steps.check_child_branches.outputs.branches }}
+      branches: ${{ steps.list_branches.outputs.branches }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: git fetch --all
-      - id: check_child_branches
-        run: |
-          set +e
-          set -x
-          target=$(echo ${HEAD_REF} | awk -F "_" '{ print $NF }')
-          result=$(git branch -a --format="%(refname:short)" | grep -E ^origin/pr/${BASE_REF}/.*_${target}$ | cut -d '/' -f 2,3,4 | grep -v -x ${HEAD_REF} |  awk '{print "\"" $1 "\""}')
-          tmp=$(echo "[${result//$'\n'/,}]" | jq -c )
-          echo "::set-output name=branches::$tmp"
-        env:
+      - id: list_branches
+        uses: ./.github/actions/list-child-branches
+        with:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}
 
@@ -195,29 +181,22 @@ jobs:
       matrix:
         branch: ${{ fromJson(needs.synchronize.outputs.branches) }}
     steps:
-      - if: ${{ matrix.branch != github.head_ref }}
+      - if: matrix.branch != github.head_ref
         id: generate_token
-        uses: ezqy/ghaction/generate-github-app-token@v0.0.1
+        uses: ezqy/ghaction/generate-github-app-token@v0.0.3
         with:
           app_id: ${{ secrets.app_id }}
           installation_id: ${{ secrets.installation_id }}
           private_key: ${{ secrets.private_key }}
-      - if: ${{ matrix.branch != github.head_ref }}
+      - if: matrix.branch != github.head_ref
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ matrix.branch }}
           token: ${{ steps.generate_token.outputs.token }}
-      - if: ${{ matrix.branch != github.head_ref }}
-        run: | 
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git fetch --all
-      - if: ${{ matrix.branch != github.head_ref }}
-        run: | 
-          set -x
-          git merge origin/${BASE_REF}
-          git push origin HEAD
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ matrix.branch }}
+      - if: matrix.branch != github.head_ref
+        uses: ./.github/actions/reverse-merge
+        with:
+          base_ref: ${{ github.base_ref }}
+          head_ref: ${{ matrix.branch }}       
+          github_action_token: ${{ steps.generate_token.outputs.token }}     

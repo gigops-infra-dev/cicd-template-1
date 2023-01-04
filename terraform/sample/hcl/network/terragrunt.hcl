@@ -1,5 +1,5 @@
 terraform {
-  source = "github.com/terraform-aws-modules/terraform-aws-vpc.git//.?ref=v3.14.4"
+  source = "github.com/terraform-aws-modules/terraform-aws-vpc.git//.?ref=v3.18.1"
 }
 include {
   path = find_in_parent_folders()
@@ -34,6 +34,6 @@ inputs = {
 
   tags = {
     Terraform   = "true"
-    Environment = "40"
+    Environment = "47b"
   }
 }
